@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meal Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- En-tête -->
+  <header class="app-header">
+    <span class="logo">🥗</span>
+    <h1>Meal Planner</h1>
+  </header>
+
+  <!-- Navigation par onglets -->
+  <nav class="tab-nav">
+    <button class="tab-btn" data-tab="ingredients">Ingrédients</button>
+    <button class="tab-btn" data-tab="recettes">Recettes</button>
+    <button class="tab-btn" data-tab="calendrier">Calendrier</button>
+    <button class="tab-btn" data-tab="courses">Liste de courses</button>
+  </nav>
+
+  <!-- ================================================================
+       ONGLET — INGRÉDIENTS
+       ================================================================ -->
+  <section id="tab-ingredients" class="tab-content">
+    <div class="section-header">
+      <h2>Ingrédients</h2>
+      <button id="btn-add-ingredient" class="btn btn-primary">+ Ajouter</button>
+    </div>
+    <div id="ingredients-container">
+      <p class="loading-text">Chargement…</p>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       ONGLET — RECETTES
+       ================================================================ -->
+  <section id="tab-recettes" class="tab-content">
+    <div class="section-header">
+      <h2>Recettes</h2>
+      <button id="btn-add-recette" class="btn btn-primary">+ Ajouter</button>
+    </div>
+    <div id="recettes-container">
+      <p class="loading-text">Chargement…</p>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       ONGLET — CALENDRIER
+       ================================================================ -->
+  <section id="tab-calendrier" class="tab-content">
+    <div class="cal-controls">
+      <button id="btn-prev-week" class="btn btn-outline">← Semaine préc.</button>
+      <button id="btn-today"     class="btn btn-secondary">Aujourd'hui</button>
+      <span   id="cal-week-title" class="cal-week-title"></span>
+      <button id="btn-next-week" class="btn btn-outline">Semaine suiv. →</button>
+    </div>
+    <div id="cal-grid" class="cal-grid" style="overflow-x:auto"></div>
+  </section>
+
+  <!-- ================================================================
+       ONGLET — LISTE DE COURSES
+       ================================================================ -->
+  <section id="tab-courses" class="tab-content">
+    <div class="section-header">
+      <h2>Liste de courses</h2>
+    </div>
+    <div class="courses-controls">
+      <div class="form-group" style="margin:0;flex:1">
+        <label for="courses-week-input">Semaine commençant le (lundi) :</label>
+        <input type="date" id="courses-week-input" />
+      </div>
+      <span id="courses-week-label" class="courses-week-label"></span>
+      <button id="btn-generate-courses" class="btn btn-primary">Générer la liste</button>
+      <button id="btn-export-pdf" class="btn btn-outline" style="display:none">⬇ Exporter PDF</button>
+    </div>
+    <div id="courses-result"></div>
+  </section>
+
+  <!-- ================================================================
+       MODALES
+       ================================================================ -->
+
+  <!-- Modale : Ingrédient -->
+  <div id="modal-ingredient" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-ingredient-title">Ingrédient</h2>
+        <button class="modal-close" onclick="hideModal('modal-ingredient')">×</button>
+      </div>
+      <form id="form-ingredient">
+        <div class="form-group">
+          <label for="ing-nom">Nom *</label>
+          <input id="ing-nom" type="text" placeholder="ex : Poulet, Farine…" required />
+        </div>
+        <div class="form-group">
+          <label for="ing-unite">Unité par défaut *</label>
+          <input id="ing-unite" type="text" placeholder="ex : g, kg, L, unité…" required />
+        </div>
+        <div class="form-group">
+          <label for="ing-categorie">Catégorie</label>
+          <input id="ing-categorie" type="text" placeholder="ex : Viandes, Légumes, Épicerie…" />
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="hideModal('modal-ingredient')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modale : Recette -->
+  <div id="modal-recette" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-recette-title">Recette</h2>
+        <button class="modal-close" onclick="hideModal('modal-recette')">×</button>
+      </div>
+      <form id="form-recette">
+        <div class="form-group">
+          <label for="rec-nom">Nom de la recette *</label>
+          <input id="rec-nom" type="text" placeholder="ex : Poulet rôti, Quiche lorraine…" required />
+        </div>
+        <div class="form-group">
+          <label for="rec-portions">Nombre de portions *</label>
+          <input id="rec-portions" type="number" min="1" max="99" value="4" required />
+        </div>
+        <div class="form-group">
+          <label for="rec-desc">Description (optionnelle)</label>
+          <textarea id="rec-desc" rows="3" placeholder="Notes, instructions générales…"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="hideModal('modal-recette')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modale : Détail recette + gestion des ingrédients -->
+  <div id="modal-recette-detail" class="modal-overlay">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <div>
+          <h2 id="detail-recette-nom"></h2>
+          <p id="detail-recette-meta" class="detail-meta"></p>
+        </div>
+        <button class="modal-close" onclick="hideModal('modal-recette-detail')">×</button>
+      </div>
+
+      <p class="modal-section-title">Ingrédients de la recette</p>
+      <table class="detail-table">
+        <thead>
+          <tr>
+            <th>Ingrédient</th>
+            <th class="text-center">Quantité</th>
+            <th class="text-center">Unité</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody id="detail-ingredients-body"></tbody>
+      </table>
+
+      <p class="modal-section-title">Ajouter un ingrédient</p>
+      <form id="form-recette-ingredient" class="ri-form">
+        <div class="form-group">
+          <label for="ri-ingredient">Ingrédient *</label>
+          <select id="ri-ingredient" name="ri-ingredient" required></select>
+        </div>
+        <div class="form-group">
+          <label for="ri-quantite">Quantité *</label>
+          <input id="ri-quantite" name="ri-quantite" type="number" step="0.001" min="0" placeholder="ex : 200" required />
+        </div>
+        <div class="form-group">
+          <label for="ri-unite">Unité *</label>
+          <input id="ri-unite" name="ri-unite" type="text" placeholder="g, ml…" required />
+        </div>
+        <div class="form-group" style="align-self:flex-end">
+          <button type="submit" class="btn btn-primary">+ Ajouter</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modale : Repas calendrier -->
+  <div id="modal-repas" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-repas-title">Planifier un repas</h2>
+        <button class="modal-close" onclick="hideModal('modal-repas')">×</button>
+      </div>
+      <form id="form-repas">
+        <!-- Champs cachés -->
+        <input type="hidden" id="repas-date" />
+        <input type="hidden" id="repas-type" />
+
+        <div class="form-group">
+          <label for="repas-recette">Recette</label>
+          <select id="repas-recette"></select>
+        </div>
+        <div class="form-group">
+          <label for="repas-personnes">Nombre de personnes *</label>
+          <input id="repas-personnes" type="number" min="1" max="99" value="2" required />
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="hideModal('modal-repas')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Conteneur de toasts -->
+  <div id="toast-container"></div>
+
+  <!-- ================================================================
+       Scripts
+       ================================================================ -->
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script src="components/ingredients.js"></script>
+  <script src="components/recettes.js"></script>
+  <script src="components/calendrier.js"></script>
+  <script src="components/courses.js"></script>
+</body>
+</html>
