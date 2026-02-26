@@ -15,11 +15,61 @@ from backend.models.courses import ListeCourses, LigneCoursesItem
 
 router = APIRouter()
 
+# ---------------------------------------------------------------------------
+# Normalisation des unités vers l'unité de base
+# ---------------------------------------------------------------------------
+
+# (unite_base, facteur) : quantite_base = quantite_source × facteur
+_UNIT_TO_BASE: dict[str, tuple[str, float]] = {
+    # Masse
+    "kg": ("g", 1000.0),
+    "Kg": ("g", 1000.0),
+    "KG": ("g", 1000.0),
+    "kilo": ("g", 1000.0),
+    "kilos": ("g", 1000.0),
+    # Volume
+    "l": ("ml", 1000.0),
+    "L": ("ml", 1000.0),
+    "litre": ("ml", 1000.0),
+    "litres": ("ml", 1000.0),
+    "liter": ("ml", 1000.0),
+    "liters": ("ml", 1000.0),
+    "cl": ("ml", 10.0),
+    "CL": ("ml", 10.0),
+    "dl": ("ml", 100.0),
+    "DL": ("ml", 100.0),
+}
+
+
+def _to_base(quantite: float, unite: str) -> tuple[float, str]:
+    """Convertit une quantité vers son unité de base (g, ml, ou inchangée)."""
+    conv = _UNIT_TO_BASE.get(unite)
+    if conv:
+        base_unite, factor = conv
+        return quantite * factor, base_unite
+    return quantite, unite
+
+
+def _fmt_qty(qty: float) -> str:
+    """Formate un nombre : supprime les zéros décimaux inutiles."""
+    if qty == int(qty):
+        return str(int(qty))
+    # Arrondi à 3 décimales max, sans zéros trailing
+    return f"{qty:.3f}".rstrip("0").rstrip(".")
+
+
+# ---------------------------------------------------------------------------
+# Helpers async
+# ---------------------------------------------------------------------------
 
 async def _run(fn: Any) -> Any:
     """Exécute un appel Supabase synchrone dans un thread (async-safe)."""
     return await asyncio.to_thread(fn)
 
+
+# ---------------------------------------------------------------------------
+# Construction de la liste de courses
+# ---------------------------------------------------------------------------
 
 async def _build_liste(debut: date, db: Client) -> ListeCourses:
     """
@@ -27,12 +77,14 @@ async def _build_liste(debut: date, db: Client) -> ListeCourses:
 
     Calcul :
         quantite_ajustee = quantite_recette × (nb_personnes / nb_portions)
-    Les quantités sont sommées par ingredient_id, puis groupées par catégorie.
-    Le coût estimé est calculé avec le prix le moins cher disponible par unité.
+    Les unités sont normalisées (kg→g, L→ml, cl→ml…) avant sommation.
+    Agrégation par (ingredient_id, unite_normalisee) pour éviter les
+    mélanges d'unités incompatibles.
+    Le coût estimé utilise le prix le moins cher compatible par unité.
     """
     fin = debut + timedelta(days=6)
 
-    # 1. Récupérer tous les repas de la semaine avec leurs recettes
+    # 1. Repas de la semaine avec leur recette
     repas_result = await _run(
         lambda: db.table("semaine_repas")
         .select("*, recettes(id, nb_portions)")
@@ -49,7 +101,7 @@ async def _build_liste(debut: date, db: Client) -> ListeCourses:
             cout_total_estime=None,
         )
 
-    # 2. Agréger les quantités par ingrédient
+    # 2. Agréger par clé composite "ingredient_id|unite_base"
     ingredient_totals: dict[str, dict] = {}
 
     for repas in repas_result.data:
@@ -73,48 +125,70 @@ async def _build_liste(debut: date, db: Client) -> ListeCourses:
             if not ing:
                 continue
             ingredient_id: str = ri["ingredient_id"]
-            quantite_ajustee: float = float(ri["quantite"]) * ratio
+            quantite_ajustee = float(ri["quantite"]) * ratio
+            norm_qty, norm_unite = _to_base(quantite_ajustee, ri["unite"])
 
-            if ingredient_id not in ingredient_totals:
-                ingredient_totals[ingredient_id] = {
+            # Clé = id + unité normalisée pour sommer proprement
+            key = f"{ingredient_id}|{norm_unite}"
+            if key not in ingredient_totals:
+                ingredient_totals[key] = {
                     "ingredient_id": ingredient_id,
                     "nom": ing["nom"],
                     "categorie": ing.get("categorie"),
                     "quantite_totale": 0.0,
-                    "unite": ri["unite"],
+                    "unite": norm_unite,
                 }
-            ingredient_totals[ingredient_id]["quantite_totale"] += quantite_ajustee
+            ingredient_totals[key]["quantite_totale"] += norm_qty
 
-    # 3. Calculer les coûts estimés depuis la table prix
+    # 3. Coûts estimés — normaliser aussi les prix de référence
     cout_total = 0.0
     has_prix = False
 
     if ingredient_totals:
-        ingredient_ids = list(ingredient_totals.keys())
+        ingredient_ids = list({t["ingredient_id"] for t in ingredient_totals.values()})
         prix_result = await _run(
-            lambda: db.table("prix").select("*").in_("ingredient_id", ingredient_ids).execute()
+            lambda: db.table("prix")
+            .select("*")
+            .in_("ingredient_id", ingredient_ids)
+            .execute()
         )
 
         prix_by_ingredient: dict[str, list] = defaultdict(list)
         for p in prix_result.data:
             prix_by_ingredient[p["ingredient_id"]].append(p)
 
-        for ing_id, totals in ingredient_totals.items():
+        for totals in ingredient_totals.values():
+            ing_id = totals["ingredient_id"]
+            unite_item = totals["unite"]
             prix_list = prix_by_ingredient.get(ing_id, [])
-            if prix_list:
-                # Prix le moins cher à la quantité de référence
-                best = min(
-                    prix_list,
-                    key=lambda p: float(p["prix"]) / float(p["quantite_reference"]),
-                )
-                prix_par_unite = float(best["prix"]) / float(best["quantite_reference"])
-                cout_ing = prix_par_unite * totals["quantite_totale"]
-                totals["cout_estime"] = round(cout_ing, 2)
-                totals["magasin_moins_cher"] = best["magasin"]
-                cout_total += cout_ing
-                has_prix = True
+            if not prix_list:
+                continue
 
-    # 4. Grouper par catégorie
+            # Garder uniquement les prix dont l'unité de référence normalisée
+            # correspond à l'unité de l'article (sinon les calculs seraient absurdes)
+            compatible: list[tuple] = []
+            for p in prix_list:
+                ref_qty_base, ref_unite_base = _to_base(
+                    float(p["quantite_reference"]), p["unite_reference"]
+                )
+                if ref_unite_base == unite_item:
+                    compatible.append((p, ref_qty_base))
+
+            if not compatible:
+                continue
+
+            best_p, best_ref_qty = min(
+                compatible,
+                key=lambda x: float(x[0]["prix"]) / x[1],
+            )
+            prix_par_unite = float(best_p["prix"]) / best_ref_qty
+            cout_ing = prix_par_unite * totals["quantite_totale"]
+            totals["cout_estime"] = round(cout_ing, 2)
+            totals["magasin_moins_cher"] = best_p["magasin"]
+            cout_total += cout_ing
+            has_prix = True
+
+    # 4. Grouper par catégorie, trier par nom
     items_par_categorie: dict[str, list[LigneCoursesItem]] = defaultdict(list)
     for totals in ingredient_totals.values():
         categorie = totals.get("categorie") or "Autre"
@@ -129,7 +203,6 @@ async def _build_liste(debut: date, db: Client) -> ListeCourses:
         )
         items_par_categorie[categorie].append(item)
 
-    # Trier chaque catégorie par nom d'ingrédient
     for cat_items in items_par_categorie.values():
         cat_items.sort(key=lambda x: x.nom)
 
@@ -142,7 +215,9 @@ async def _build_liste(debut: date, db: Client) -> ListeCourses:
 
 
 @router.get("/", response_model=ListeCourses)
-async def get_liste_courses(debut: date, db: Client = Depends(get_supabase)) -> ListeCourses:
+async def get_liste_courses(
+    debut: date, db: Client = Depends(get_supabase)
+) -> ListeCourses:
     """Génère la liste de courses pour la semaine commençant à la date 'debut'."""
     return await _build_liste(debut, db)
 
@@ -176,16 +251,13 @@ async def export_pdf(debut: date, db: Client = Depends(get_supabase)) -> Respons
 
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle(
-        "CustomTitle",
-        parent=styles["Title"],
-        fontSize=18,
-        spaceAfter=6,
+        "CustomTitle", parent=styles["Title"], fontSize=18, spaceAfter=6
     )
     subtitle_style = ParagraphStyle(
         "Subtitle",
         parent=styles["Normal"],
         fontSize=11,
-        textColor=colors.HexColor("#52B788"),
+        textColor=colors.HexColor("#7C9A7E"),
         spaceAfter=12,
     )
     category_style = ParagraphStyle(
@@ -194,7 +266,7 @@ async def export_pdf(debut: date, db: Client = Depends(get_supabase)) -> Respons
         fontSize=13,
         spaceBefore=14,
         spaceAfter=4,
-        textColor=colors.HexColor("#2D6A4F"),
+        textColor=colors.HexColor("#4A7C59"),
     )
 
     story = []
@@ -213,24 +285,22 @@ async def export_pdf(debut: date, db: Client = Depends(get_supabase)) -> Respons
         )
     story.append(Spacer(1, 0.4 * cm))
 
-    col_widths = [5.5 * cm, 2.5 * cm, 2.5 * cm, 3 * cm, 3 * cm]
+    col_widths = [5.5 * cm, 3.5 * cm, 3 * cm, 3 * cm]
 
     for categorie, items in liste.items_par_categorie.items():
         story.append(Paragraph(categorie, category_style))
-
-        table_data = [["Ingrédient", "Quantité", "Unité", "Coût estimé", "Magasin"]]
+        table_data = [["Ingrédient", "Quantité", "Coût estimé", "Magasin"]]
         for item in items:
+            qty_str = f"{_fmt_qty(item.quantite_totale)} {item.unite}"
             cout = f"{item.cout_estime:.2f} €" if item.cout_estime is not None else "—"
             magasin = item.magasin_moins_cher or "—"
-            table_data.append(
-                [item.nom, f"{item.quantite_totale:g}", item.unite, cout, magasin]
-            )
+            table_data.append([item.nom, qty_str, cout, magasin])
 
         table = Table(table_data, colWidths=col_widths)
         table.setStyle(
             TableStyle(
                 [
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2D6A4F")),
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#4A7C59")),
                     ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
                     ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
                     ("FONTSIZE", (0, 0), (-1, -1), 9),
@@ -239,7 +309,7 @@ async def export_pdf(debut: date, db: Client = Depends(get_supabase)) -> Respons
                         "ROWBACKGROUNDS",
                         (0, 1),
                         (-1, -1),
-                        [colors.white, colors.HexColor("#F1FAF5")],
+                        [colors.white, colors.HexColor("#F0F5F0")],
                     ),
                     ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#CCCCCC")),
                     ("TOPPADDING", (0, 0), (-1, -1), 5),
