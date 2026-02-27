@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers import calendrier, courses, ingredients, recettes
+from backend.routers import budget, calendrier, courses, ingredients, recettes
 
 app = FastAPI(
     title="Meal Planner API",
@@ -24,6 +24,7 @@ app.include_router(ingredients.router, prefix="/api/ingredients", tags=["ingredi
 app.include_router(recettes.router, prefix="/api/recettes", tags=["recettes"])
 app.include_router(calendrier.router, prefix="/api/calendrier", tags=["calendrier"])
 app.include_router(courses.router, prefix="/api/courses", tags=["courses"])
+app.include_router(budget.router, prefix="/api/budgets", tags=["budget"])
 
 
 @app.get("/api/health")
