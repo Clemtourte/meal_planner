@@ -205,3 +205,26 @@ meal_planner/
 | DELETE | `/api/calendrier/{id}` | Supprimer un repas |
 | GET | `/api/courses/?debut=YYYY-MM-DD` | Liste de courses JSON |
 | GET | `/api/courses/pdf?debut=YYYY-MM-DD` | Export PDF |
+| POST | `/api/budgets/` | Créer un budget (hebdo/mensuel) |
+| GET | `/api/budgets/actuel` | Budget actuel par type |
+| GET | `/api/budgets/historique` | Historique des dépenses |
+| POST | `/api/budgets/historique` | Enregistrer une dépense |
+| GET | `/api/recettes/{id}/cout` | Coût estimé d'une recette |
+
+---
+
+## Multi-utilisateurs
+
+L'architecture supporte plusieurs utilisateurs via le header `X-User-ID`.
+L'authentification complète sera activée lors du déploiement avec
+Supabase Auth Row Level Security.
+
+**Fonctionnement actuel :**
+- Chaque requête peut transmettre un identifiant utilisateur : `X-User-ID: user123`
+- Si le header est absent, l'identifiant `default_user` est utilisé automatiquement
+- Les tables `recettes`, `semaine_repas`, `budgets` et `historique_depenses`
+  filtrent et taguent les données par `user_id`
+- Le frontend actuel fonctionne sans modification (`default_user` par défaut)
+
+**Migration requise :** exécuter `migrations/005_multiuser.sql` dans Supabase
+pour ajouter la colonne `user_id` aux tables concernées.

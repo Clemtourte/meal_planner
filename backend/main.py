@@ -1,7 +1,8 @@
 """Point d'entrée de l'application FastAPI — Meal Planner."""
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from backend.routers import budget, calendrier, courses, ingredients, recettes
 
@@ -19,6 +20,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+class UserIDMiddleware(BaseHTTPMiddleware):
+    """Lit le header X-User-ID et l'injecte dans request.state.user_id.
+
+    Si le header est absent, utilise 'default_user' pour maintenir la
+    compatibilité avec le frontend actuel (authentification complète via
+    Supabase Auth sera activée lors du déploiement).
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        """Injecte user_id dans request.state avant de passer au handler."""
+        request.state.user_id = request.headers.get("X-User-ID", "default_user")
+        return await call_next(request)
+
+
+app.add_middleware(UserIDMiddleware)
 
 app.include_router(ingredients.router, prefix="/api/ingredients", tags=["ingredients"])
 app.include_router(recettes.router, prefix="/api/recettes", tags=["recettes"])

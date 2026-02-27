@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from supabase import Client
 
 from backend.database import get_supabase
+from backend.dependencies import get_user_id
 from backend.models.recettes import (
     RecetteCoutIngredient,
     RecetteCoutResponse,
@@ -69,18 +70,32 @@ async def _get_recette_detail(recette_id: str, db: Client) -> dict:
 
 
 @router.get("/", response_model=list[RecetteResponse])
-async def list_recettes(db: Client = Depends(get_supabase)) -> list[dict]:
-    """Retourne toutes les recettes triées par nom."""
-    result = await _run(lambda: db.table("recettes").select("*").order("nom").execute())
+async def list_recettes(
+    db: Client = Depends(get_supabase),
+    user_id: str = Depends(get_user_id),
+) -> list[dict]:
+    """Retourne toutes les recettes de l'utilisateur, triées par nom."""
+    result = await _run(
+        lambda: (
+            db.table("recettes")
+            .select("*")
+            .eq("user_id", user_id)
+            .order("nom")
+            .execute()
+        )
+    )
     return result.data
 
 
 @router.post("/", response_model=RecetteResponse, status_code=201)
 async def create_recette(
-    recette: RecetteCreate, db: Client = Depends(get_supabase)
+    recette: RecetteCreate,
+    db: Client = Depends(get_supabase),
+    user_id: str = Depends(get_user_id),
 ) -> dict:
     """Crée une nouvelle recette (sans ingrédients)."""
     data = recette.model_dump()
+    data["user_id"] = user_id
     result = await _run(lambda: db.table("recettes").insert(data).execute())
     if not result.data:
         raise HTTPException(
@@ -91,7 +106,9 @@ async def create_recette(
 
 @router.post("/with-ingredients", response_model=RecetteDetailResponse, status_code=201)
 async def create_recette_with_ingredients(
-    payload: RecetteCreateWithIngredients, db: Client = Depends(get_supabase)
+    payload: RecetteCreateWithIngredients,
+    db: Client = Depends(get_supabase),
+    user_id: str = Depends(get_user_id),
 ) -> dict:
     """
     Crée une recette avec tous ses ingrédients en une seule requête.
@@ -104,6 +121,7 @@ async def create_recette_with_ingredients(
         "nb_portions": payload.nb_portions,
         "description": payload.description,
         "tags": payload.tags,
+        "user_id": user_id,
     }
     result = await _run(lambda: db.table("recettes").insert(recette_data).execute())
     if not result.data:
