@@ -11,7 +11,7 @@ from fastapi.responses import Response
 from supabase import Client
 
 from backend.database import get_supabase
-from backend.models.courses import ListeCourses, LigneCoursesItem
+from backend.models.courses import LigneCoursesItem, ListeCourses
 
 router = APIRouter()
 
@@ -62,6 +62,7 @@ def _fmt_qty(qty: float) -> str:
 # Helpers async
 # ---------------------------------------------------------------------------
 
+
 async def _run(fn: Any) -> Any:
     """Exécute un appel Supabase synchrone dans un thread (async-safe)."""
     return await asyncio.to_thread(fn)
@@ -70,6 +71,7 @@ async def _run(fn: Any) -> Any:
 # ---------------------------------------------------------------------------
 # Construction de la liste de courses
 # ---------------------------------------------------------------------------
+
 
 async def _build_liste(debut: date, db: Client) -> ListeCourses:
     """
@@ -86,11 +88,13 @@ async def _build_liste(debut: date, db: Client) -> ListeCourses:
 
     # 1. Repas de la semaine avec leur recette
     repas_result = await _run(
-        lambda: db.table("semaine_repas")
-        .select("*, recettes(id, nb_portions)")
-        .gte("date", str(debut))
-        .lte("date", str(fin))
-        .execute()
+        lambda: (
+            db.table("semaine_repas")
+            .select("*, recettes(id, nb_portions)")
+            .gte("date", str(debut))
+            .lte("date", str(fin))
+            .execute()
+        )
     )
 
     if not repas_result.data:
@@ -114,10 +118,12 @@ async def _build_liste(debut: date, db: Client) -> ListeCourses:
         ratio: float = nb_personnes / nb_portions
 
         ri_result = await _run(
-            lambda r_id=str(repas["recette_id"]): db.table("recette_ingredients")
-            .select("*, ingredients(nom, unite_defaut, categorie)")
-            .eq("recette_id", r_id)
-            .execute()
+            lambda r_id=str(repas["recette_id"]): (
+                db.table("recette_ingredients")
+                .select("*, ingredients(nom, unite_defaut, categorie)")
+                .eq("recette_id", r_id)
+                .execute()
+            )
         )
 
         for ri in ri_result.data:
@@ -147,10 +153,12 @@ async def _build_liste(debut: date, db: Client) -> ListeCourses:
     if ingredient_totals:
         ingredient_ids = list({t["ingredient_id"] for t in ingredient_totals.values()})
         prix_result = await _run(
-            lambda: db.table("prix")
-            .select("*")
-            .in_("ingredient_id", ingredient_ids)
-            .execute()
+            lambda: (
+                db.table("prix")
+                .select("*")
+                .in_("ingredient_id", ingredient_ids)
+                .execute()
+            )
         )
 
         prix_by_ingredient: dict[str, list] = defaultdict(list)
@@ -193,7 +201,9 @@ async def _build_liste(debut: date, db: Client) -> ListeCourses:
     for totals in ingredient_totals.values():
         mag = totals.get("magasin_moins_cher")
         if mag and "cout_estime" in totals:
-            cout_par_magasin[mag] = cout_par_magasin.get(mag, 0.0) + totals["cout_estime"]
+            cout_par_magasin[mag] = (
+                cout_par_magasin.get(mag, 0.0) + totals["cout_estime"]
+            )
     cout_par_magasin = {k: round(v, 2) for k, v in sorted(cout_par_magasin.items())}
 
     # 4. Grouper par catégorie, trier par nom
@@ -336,7 +346,5 @@ async def export_pdf(debut: date, db: Client = Depends(get_supabase)) -> Respons
     return Response(
         content=buffer.getvalue(),
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="courses_{debut}.pdf"'
-        },
+        headers={"Content-Disposition": f'attachment; filename="courses_{debut}.pdf"'},
     )

@@ -1,8 +1,8 @@
 """Router FastAPI pour la gestion des ingrédients et des prix."""
 
 import asyncio
-from uuid import UUID
 from typing import Any
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from supabase import Client
@@ -10,11 +10,11 @@ from supabase import Client
 from backend.database import get_supabase
 from backend.models.ingredients import (
     IngredientCreate,
-    IngredientUpdate,
     IngredientResponse,
+    IngredientUpdate,
     PrixCreate,
-    PrixUpdate,
     PrixResponse,
+    PrixUpdate,
 )
 
 router = APIRouter()
@@ -23,6 +23,7 @@ router = APIRouter()
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 async def _run(fn: Any) -> Any:
     """Exécute un appel Supabase synchrone dans un thread (async-safe)."""
@@ -33,10 +34,13 @@ async def _run(fn: Any) -> Any:
 # Ingrédients — CRUD
 # ---------------------------------------------------------------------------
 
+
 @router.get("/", response_model=list[IngredientResponse])
 async def list_ingredients(db: Client = Depends(get_supabase)) -> list[dict]:
     """Retourne tous les ingrédients triés par nom."""
-    result = await _run(lambda: db.table("ingredients").select("*").order("nom").execute())
+    result = await _run(
+        lambda: db.table("ingredients").select("*").order("nom").execute()
+    )
     return result.data
 
 
@@ -49,7 +53,9 @@ async def create_ingredient(
         lambda: db.table("ingredients").insert(ingredient.model_dump()).execute()
     )
     if not result.data:
-        raise HTTPException(status_code=400, detail="Échec de la création de l'ingrédient")
+        raise HTTPException(
+            status_code=400, detail="Échec de la création de l'ingrédient"
+        )
     return result.data[0]
 
 
@@ -59,7 +65,9 @@ async def get_ingredient(
 ) -> dict:
     """Retourne un ingrédient par son identifiant."""
     result = await _run(
-        lambda: db.table("ingredients").select("*").eq("id", str(ingredient_id)).execute()
+        lambda: (
+            db.table("ingredients").select("*").eq("id", str(ingredient_id)).execute()
+        )
     )
     if not result.data:
         raise HTTPException(status_code=404, detail="Ingrédient introuvable")
@@ -77,10 +85,12 @@ async def update_ingredient(
     if not update_data:
         raise HTTPException(status_code=400, detail="Aucune donnée à mettre à jour")
     result = await _run(
-        lambda: db.table("ingredients")
-        .update(update_data)
-        .eq("id", str(ingredient_id))
-        .execute()
+        lambda: (
+            db.table("ingredients")
+            .update(update_data)
+            .eq("id", str(ingredient_id))
+            .execute()
+        )
     )
     if not result.data:
         raise HTTPException(status_code=404, detail="Ingrédient introuvable")
@@ -101,17 +111,20 @@ async def delete_ingredient(
 # Prix — gestion multi-magasins
 # ---------------------------------------------------------------------------
 
+
 @router.get("/{ingredient_id}/prix", response_model=list[PrixResponse])
 async def list_prix(
     ingredient_id: UUID, db: Client = Depends(get_supabase)
 ) -> list[dict]:
     """Retourne tous les prix d'un ingrédient, triés par magasin."""
     result = await _run(
-        lambda: db.table("prix")
-        .select("*")
-        .eq("ingredient_id", str(ingredient_id))
-        .order("magasin")
-        .execute()
+        lambda: (
+            db.table("prix")
+            .select("*")
+            .eq("ingredient_id", str(ingredient_id))
+            .order("magasin")
+            .execute()
+        )
     )
     return result.data
 
@@ -141,11 +154,13 @@ async def update_prix(
     if not update_data:
         raise HTTPException(status_code=400, detail="Aucune donnée à mettre à jour")
     result = await _run(
-        lambda: db.table("prix")
-        .update(update_data)
-        .eq("id", str(prix_id))
-        .eq("ingredient_id", str(ingredient_id))
-        .execute()
+        lambda: (
+            db.table("prix")
+            .update(update_data)
+            .eq("id", str(prix_id))
+            .eq("ingredient_id", str(ingredient_id))
+            .execute()
+        )
     )
     if not result.data:
         raise HTTPException(status_code=404, detail="Prix introuvable")
@@ -158,9 +173,11 @@ async def delete_prix(
 ) -> None:
     """Supprime un prix."""
     await _run(
-        lambda: db.table("prix")
-        .delete()
-        .eq("id", str(prix_id))
-        .eq("ingredient_id", str(ingredient_id))
-        .execute()
+        lambda: (
+            db.table("prix")
+            .delete()
+            .eq("id", str(prix_id))
+            .eq("ingredient_id", str(ingredient_id))
+            .execute()
+        )
     )
