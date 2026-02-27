@@ -6,10 +6,13 @@ let _recettes = [];
 let _allIngredients = [];
 let _editingRecetteId = null;
 let _currentRecetteDetail = null;
+let _searchQuery = "";
+let _activeTag = null;
 
 async function initRecettes() {
   await Promise.all([_loadRecettes(), _loadAllIngredients()]);
   _renderRecettes();
+  _renderTagFilters();
   _bindRecetteEvents();
 }
 
@@ -30,14 +33,35 @@ async function _loadAllIngredients() {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Rendu de la liste avec filtres
+// ---------------------------------------------------------------------------
+
+function _getFilteredRecettes() {
+  let list = _recettes;
+  if (_searchQuery) {
+    const q = _searchQuery.toLowerCase();
+    list = list.filter(
+      (r) =>
+        r.nom.toLowerCase().includes(q) ||
+        (r.description && r.description.toLowerCase().includes(q))
+    );
+  }
+  if (_activeTag) {
+    list = list.filter((r) => (r.tags || []).includes(_activeTag));
+  }
+  return list;
+}
+
 function _renderRecettes() {
   const container = document.getElementById("recettes-container");
-  if (_recettes.length === 0) {
+  const filtered = _getFilteredRecettes();
+  if (filtered.length === 0) {
     container.innerHTML =
-      '<p class="empty-state">Aucune recette. Cliquez sur « Ajouter » pour commencer.</p>';
+      '<p class="empty-state">Aucune recette correspondante.</p>';
     return;
   }
-  container.innerHTML = _recettes
+  container.innerHTML = filtered
     .map(
       (r) => `
     <div class="card recette-card" id="recette-card-${r.id}">
@@ -53,9 +77,42 @@ function _renderRecettes() {
         </div>
       </div>
       ${r.description ? `<p class="recette-desc">${_escR(r.description)}</p>` : ""}
+      ${
+        r.tags && r.tags.length > 0
+          ? `<div class="rec-tags">${r.tags.map((t) => `<span class="rec-tag">${_escR(t)}</span>`).join("")}</div>`
+          : ""
+      }
     </div>`
     )
     .join("");
+}
+
+function _collectAllTags() {
+  const tags = new Set();
+  _recettes.forEach((r) => (r.tags || []).forEach((t) => tags.add(t)));
+  return [...tags].sort();
+}
+
+function _renderTagFilters() {
+  const container = document.getElementById("recette-tag-filters");
+  if (!container) return;
+  const tags = _collectAllTags();
+  if (tags.length === 0) {
+    container.innerHTML = "";
+    return;
+  }
+  container.innerHTML = tags
+    .map(
+      (t) =>
+        `<button class="tag-filter-btn${_activeTag === t ? " active" : ""}" onclick="_toggleTagFilter('${_escR(t)}')">${_escR(t)}</button>`
+    )
+    .join("");
+}
+
+function _toggleTagFilter(tag) {
+  _activeTag = _activeTag === tag ? null : tag;
+  _renderTagFilters();
+  _renderRecettes();
 }
 
 function _bindRecetteEvents() {
@@ -70,6 +127,14 @@ function _bindRecetteEvents() {
 
   const btnAddRow = document.getElementById("btn-add-ing-row");
   if (btnAddRow) btnAddRow.onclick = () => _addIngredientRow();
+
+  const search = document.getElementById("recette-search");
+  if (search) {
+    search.oninput = () => {
+      _searchQuery = search.value.trim();
+      _renderRecettes();
+    };
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -93,6 +158,7 @@ function openEditRecette(id) {
   document.getElementById("rec-nom").value = rec.nom;
   document.getElementById("rec-portions").value = rec.nb_portions;
   document.getElementById("rec-desc").value = rec.description || "";
+  document.getElementById("rec-tags").value = (rec.tags || []).join(", ");
   document.getElementById("rec-ingredients-section").style.display = "none";
   showModal("modal-recette");
 }
@@ -140,18 +206,26 @@ function _onIngSelectChange(sel) {
 // Soumission du formulaire recette
 // ---------------------------------------------------------------------------
 
+function _parseTags() {
+  const val = document.getElementById("rec-tags").value;
+  return val
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+}
+
 async function submitRecetteForm(e) {
   e.preventDefault();
   const nom = document.getElementById("rec-nom").value.trim();
   const nb_portions = parseInt(document.getElementById("rec-portions").value, 10);
   const description = document.getElementById("rec-desc").value.trim() || null;
+  const tags = _parseTags();
 
   try {
     if (_editingRecetteId) {
-      await apiPatch(`/recettes/${_editingRecetteId}`, { nom, nb_portions, description });
+      await apiPatch(`/recettes/${_editingRecetteId}`, { nom, nb_portions, description, tags });
       showToast("Recette modifiée ✓");
     } else {
-      // Collecter les lignes d'ingrédients
       const rows = document.querySelectorAll("#rec-ing-rows .ri-row");
       const ingredients = [];
       for (const row of rows) {
@@ -161,12 +235,13 @@ async function submitRecetteForm(e) {
         if (!ingId || !unite || isNaN(quantite) || quantite <= 0) continue;
         ingredients.push({ ingredient_id: ingId, quantite, unite });
       }
-      await apiPost("/recettes/with-ingredients", { nom, nb_portions, description, ingredients });
+      await apiPost("/recettes/with-ingredients", { nom, nb_portions, description, tags, ingredients });
       showToast("Recette créée ✓");
     }
     hideModal("modal-recette");
     await _loadRecettes();
     _renderRecettes();
+    _renderTagFilters();
   } catch (err) {
     showToast("Erreur : " + err.message, "error");
   }
@@ -179,6 +254,7 @@ async function confirmDeleteRecette(id, nom) {
     showToast("Recette supprimée");
     await _loadRecettes();
     _renderRecettes();
+    _renderTagFilters();
   } catch (err) {
     showToast("Erreur : " + err.message, "error");
   }
@@ -286,7 +362,6 @@ function _populateIngredientSelect() {
           `<option value="${i.id}" data-unite="${_escR(i.unite_defaut)}">${_escR(i.nom)} (${_escR(i.unite_defaut)})</option>`
       )
       .join("");
-  // Auto-remplir l'unité selon l'ingrédient sélectionné
   sel.onchange = function () {
     const opt = this.options[this.selectedIndex];
     const unite = opt ? opt.dataset.unite || "" : "";

@@ -24,3 +24,4 @@ class ListeCourses(BaseModel):
     semaine_fin: str
     items_par_categorie: dict[str, list[LigneCoursesItem]]
     cout_total_estime: Optional[float] = None
+    cout_par_magasin: dict[str, float] = {}

@@ -695,6 +695,87 @@ input, select, textarea { font-family: inherit; }
 }
 
 /* ---------------------------------------------------------------------------
+   Recherche & filtres tags (onglet recettes)
+   --------------------------------------------------------------------------- */
+.section-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-lg);
+}
+
+.search-input {
+  flex: 1;
+  min-width: 180px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: .95rem;
+  padding: 8px 12px;
+  outline: none;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: inherit;
+  transition: border-color var(--transition);
+}
+
+.search-input:focus {
+  border-color: var(--color-primary-light);
+  background: white;
+}
+
+.tag-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.tag-filter-btn {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-muted);
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 3px 12px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.tag-filter-btn:hover {
+  border-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.tag-filter-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+/* Tags sur les cartes recette */
+.rec-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: var(--space-sm);
+}
+
+.rec-tag {
+  background: var(--color-accent);
+  color: var(--color-primary-dark);
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+}
+
+/* Comparatif magasins (courses) */
+.magasin-comparatif {
+  margin-bottom: var(--space-lg);
+}
+
+/* ---------------------------------------------------------------------------
    Toasts
    --------------------------------------------------------------------------- */
 #toast-container {

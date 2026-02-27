@@ -98,6 +98,26 @@ function _renderCoursesList(data) {
          </div>`
       : "";
 
+  // Comparatif par magasin
+  const magasinEntries = Object.entries(data.cout_par_magasin || {});
+  const magasinHTML =
+    magasinEntries.length > 1
+      ? `<div class="magasin-comparatif">
+           <h3 class="category-label">Répartition par magasin</h3>
+           <table class="courses-table">
+             <thead><tr><th>Magasin</th><th class="text-center">Coût estimé</th></tr></thead>
+             <tbody>
+               ${magasinEntries
+                 .map(
+                   ([mag, cout]) =>
+                     `<tr><td>${_escCo(mag)}</td><td class="text-center courses-cout">${cout.toFixed(2)} €</td></tr>`
+                 )
+                 .join("")}
+             </tbody>
+           </table>
+         </div>`
+      : "";
+
   const categoriesHTML = Object.entries(data.items_par_categorie)
     .map(([cat, items]) => {
       const rows = items
@@ -135,7 +155,7 @@ function _renderCoursesList(data) {
     })
     .join("");
 
-  container.innerHTML = totalHTML + categoriesHTML;
+  container.innerHTML = totalHTML + magasinHTML + categoriesHTML;
 }
 
 async function exportPdf() {

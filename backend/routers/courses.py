@@ -188,6 +188,14 @@ async def _build_liste(debut: date, db: Client) -> ListeCourses:
             cout_total += cout_ing
             has_prix = True
 
+    # 3b. Coûts par magasin
+    cout_par_magasin: dict[str, float] = {}
+    for totals in ingredient_totals.values():
+        mag = totals.get("magasin_moins_cher")
+        if mag and "cout_estime" in totals:
+            cout_par_magasin[mag] = cout_par_magasin.get(mag, 0.0) + totals["cout_estime"]
+    cout_par_magasin = {k: round(v, 2) for k, v in sorted(cout_par_magasin.items())}
+
     # 4. Grouper par catégorie, trier par nom
     items_par_categorie: dict[str, list[LigneCoursesItem]] = defaultdict(list)
     for totals in ingredient_totals.values():
@@ -211,6 +219,7 @@ async def _build_liste(debut: date, db: Client) -> ListeCourses:
         semaine_fin=str(fin),
         items_par_categorie=dict(sorted(items_par_categorie.items())),
         cout_total_estime=round(cout_total, 2) if has_prix else None,
+        cout_par_magasin=cout_par_magasin,
     )
 
 

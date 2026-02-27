@@ -48,6 +48,10 @@
       <h2>Recettes</h2>
       <button id="btn-add-recette" class="btn btn-primary">+ Ajouter</button>
     </div>
+    <div class="section-search">
+      <input type="text" id="recette-search" class="search-input" placeholder="Rechercher une recette…" />
+      <div id="recette-tag-filters" class="tag-filters"></div>
+    </div>
     <div id="recettes-container">
       <p class="loading-text">Chargement…</p>
     </div>
@@ -136,6 +140,10 @@
         <div class="form-group">
           <label for="rec-desc">Description (optionnelle)</label>
           <textarea id="rec-desc" rows="2" placeholder="Notes, instructions générales…"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="rec-tags">Tags (séparés par des virgules)</label>
+          <input id="rec-tags" type="text" placeholder="ex : végétarien, rapide, four…" />
         </div>
 
         <!-- Section ingrédients — visible uniquement à la création -->
