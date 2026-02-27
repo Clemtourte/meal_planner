@@ -57,8 +57,22 @@ function _renderRecettes() {
   const container = document.getElementById("recettes-container");
   const filtered = _getFilteredRecettes();
   if (filtered.length === 0) {
-    container.innerHTML =
-      '<p class="empty-state">Aucune recette correspondante.</p>';
+    const msg = _searchQuery || _activeTag
+      ? "Aucune recette ne correspond à votre recherche."
+      : "Votre livre de recettes est vide.";
+    const sub = _searchQuery || _activeTag
+      ? "Essayez d'autres mots-clés ou filtres."
+      : "Cliquez sur « Ajouter » pour créer votre première recette.";
+    container.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+        <p>${msg}</p>
+        <small>${sub}</small>
+      </div>`;
     return;
   }
   container.innerHTML = filtered

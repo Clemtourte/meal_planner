@@ -1,42 +1,57 @@
 /* =============================================================================
-   Meal Planner — Jardin Culinaire
-   Organic · Natural · Refined
-   Playfair Display (display) + DM Sans (body)
+   Jardin Culinaire — Design System
+   Warm food editorial · Sage green × Terracotta × Cream
+   Playfair Display (display headings) + DM Sans (body)
    ============================================================================= */
 
 /* ---------------------------------------------------------------------------
-   Variables
+   Design tokens
    --------------------------------------------------------------------------- */
 :root {
-  /* Palette */
+  /* Core palette */
   --color-primary:        #7C9A7E;
   --color-primary-dark:   #4A6355;
   --color-primary-light:  #B5CDB8;
   --color-accent:         #D4E6D6;
-  --color-accent-warm:    #EDE8E0;
 
-  --color-bg:             #F7F5F0;
-  --color-surface:        #FFFFFF;
-  --color-surface-warm:   #FDFAF5;
+  /* Terracotta accent */
+  --color-terracotta:       #C4704F;
+  --color-terracotta-dark:  #A05638;
+  --color-terracotta-light: #FAF0EC;
 
-  --color-border:         #DDD8CC;
-  --color-border-light:   #EDE9E1;
+  /* Warm neutrals */
+  --color-bg:            #F5F0E8;
+  --color-surface:       #FEFCF8;
+  --color-surface-warm:  #FBF8F3;
+  --color-border:        #E0D9CC;
+  --color-border-light:  #EDE9E1;
 
-  --color-text:           #2C2C2C;
-  --color-text-muted:     #7A7A6E;
-  --color-text-light:     #B0ADA5;
+  /* Text */
+  --color-text:          #2A2520;
+  --color-text-muted:    #7A736A;
+  --color-text-light:    #B0A99F;
 
-  --color-danger:         #B5402E;
-  --color-danger-light:   #FAF0EE;
-  --color-success:        #5A9B6A;
-  --color-warning:        #C07B42;
+  /* Semantic */
+  --color-danger:        #B5402E;
+  --color-danger-light:  #FAF0EE;
+  --color-success:       #5A9B6A;
+  --color-warning:       #C07B42;
 
   /* Typography */
   --font-display: 'Playfair Display', Georgia, serif;
   --font-body:    'DM Sans', system-ui, sans-serif;
-  --font-mono:    'JetBrains Mono', monospace;
 
-  /* Spacing */
+  /* Font sizes */
+  --text-xs:      0.72rem;
+  --text-sm:      0.82rem;
+  --text-base:    0.95rem;
+  --text-md:      1.05rem;
+  --text-lg:      1.25rem;
+  --text-xl:      1.55rem;
+  --text-2xl:     2rem;
+  --text-display: 2.4rem;
+
+  /* Spacing scale */
   --space-xs:  4px;
   --space-sm:  8px;
   --space-md:  16px;
@@ -48,13 +63,14 @@
   --radius-sm:  6px;
   --radius-md:  12px;
   --radius-lg:  20px;
+  --radius-xl:  28px;
 
   /* Shadows */
-  --shadow-xs:  0 1px 3px rgba(44,44,44,.05);
-  --shadow-sm:  0 2px 8px rgba(44,44,44,.08);
-  --shadow-md:  0 6px 20px rgba(44,44,44,.11);
-  --shadow-lg:  0 12px 40px rgba(44,44,44,.14);
-  --shadow-xl:  0 24px 64px rgba(44,44,44,.18);
+  --shadow-xs:  0 1px 3px rgba(42,37,32,.04);
+  --shadow-sm:  0 2px 8px rgba(42,37,32,.07);
+  --shadow-md:  0 6px 20px rgba(42,37,32,.10);
+  --shadow-lg:  0 12px 40px rgba(42,37,32,.13);
+  --shadow-xl:  0 24px 64px rgba(42,37,32,.17);
 
   /* Transitions */
   --ease:            cubic-bezier(0.4, 0, 0.2, 1);
@@ -74,7 +90,7 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   min-height: 100vh;
-  line-height: 1.55;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -86,8 +102,8 @@ input, select, textarea { font-family: inherit; }
    Header
    --------------------------------------------------------------------------- */
 .app-header {
-  background: linear-gradient(135deg, var(--color-primary-dark) 0%, #6B8C78 100%);
-  padding: 18px var(--space-xl);
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, #5D7D69 60%, #6B8C78 100%);
+  padding: 20px var(--space-xl);
   display: flex;
   align-items: center;
   gap: var(--space-md);
@@ -95,44 +111,72 @@ input, select, textarea { font-family: inherit; }
   overflow: hidden;
 }
 
-/* Decorative circles for depth */
+/* Decorative organic shapes */
 .app-header::before {
   content: "";
   position: absolute;
-  right: -30px; top: -50px;
-  width: 180px; height: 180px;
-  background: rgba(255,255,255,.06);
+  right: -40px; top: -60px;
+  width: 220px; height: 220px;
+  background: rgba(255,255,255,.05);
   border-radius: 50%;
 }
 .app-header::after {
   content: "";
   position: absolute;
-  right: 100px; bottom: -60px;
-  width: 140px; height: 140px;
+  right: 140px; bottom: -70px;
+  width: 160px; height: 160px;
   background: rgba(255,255,255,.04);
   border-radius: 50%;
 }
 
-.app-header .logo {
-  font-size: 1.7rem;
+.app-header-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
   position: relative;
   z-index: 1;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,.2));
+}
+
+.app-logo {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,.12);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 12px rgba(0,0,0,.2);
+  backdrop-filter: blur(8px);
+}
+
+.app-logo svg {
+  width: 22px;
+  height: 22px;
+  color: white;
 }
 
 .app-header h1 {
   font-family: var(--font-display);
-  font-size: 1.55rem;
+  font-size: var(--text-xl);
   font-weight: 700;
   color: white;
-  letter-spacing: -0.4px;
-  position: relative;
-  z-index: 1;
-  text-shadow: 0 1px 3px rgba(0,0,0,.15);
+  letter-spacing: -0.5px;
+  text-shadow: 0 1px 4px rgba(0,0,0,.2);
+  line-height: 1.15;
+}
+
+.app-subtitle {
+  font-size: var(--text-xs);
+  color: rgba(255,255,255,.65);
+  font-weight: 400;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  margin-top: 1px;
 }
 
 /* ---------------------------------------------------------------------------
-   Tab Navigation
+   Tab Navigation — sticky with animated indicator + SVG icons
    --------------------------------------------------------------------------- */
 .tab-nav {
   background: var(--color-surface);
@@ -141,16 +185,20 @@ input, select, textarea { font-family: inherit; }
   gap: 0;
   padding: 0 var(--space-xl);
   overflow-x: auto;
-  position: relative;
-  box-shadow: var(--shadow-xs);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+  scrollbar-width: none;
 }
+.tab-nav::-webkit-scrollbar { display: none; }
 
-/* Animated tab indicator pill — positioned via JS */
+/* Animated indicator */
 #tab-indicator {
   position: absolute;
   bottom: 0;
   height: 3px;
-  background: var(--color-primary);
+  background: var(--color-terracotta);
   border-radius: 3px 3px 0 0;
   transition: left var(--transition-slow), width var(--transition-slow);
   pointer-events: none;
@@ -163,29 +211,45 @@ input, select, textarea { font-family: inherit; }
   border-bottom: 3px solid transparent;
   color: var(--color-text-muted);
   font-family: var(--font-body);
-  font-size: .875rem;
-  font-weight: 500;
-  padding: var(--space-md) var(--space-lg);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 10px var(--space-md);
   transition: color var(--transition);
   white-space: nowrap;
   margin-bottom: -1px;
-  letter-spacing: .2px;
+  letter-spacing: .25px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 72px;
+  text-transform: uppercase;
+}
+
+.tab-btn svg {
+  width: 18px;
+  height: 18px;
+  transition: color var(--transition);
+  flex-shrink: 0;
 }
 
 .tab-btn:hover  { color: var(--color-primary); }
-.tab-btn.active { color: var(--color-primary-dark); font-weight: 600; }
+.tab-btn.active {
+  color: var(--color-terracotta);
+  font-weight: 700;
+}
 
 /* ---------------------------------------------------------------------------
-   Tab content — with fade-up entry
+   Tab content — staggered fade-up entry
    --------------------------------------------------------------------------- */
-.tab-content { display: none; padding: var(--space-xl); }
+.tab-content { display: none; padding: var(--space-xl); max-width: 1200px; margin: 0 auto; }
 .tab-content.active {
   display: block;
-  animation: fadeUp 0.3s var(--ease) both;
+  animation: fadeUp 0.32s var(--ease) both;
 }
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -198,7 +262,7 @@ input, select, textarea { font-family: inherit; }
 
 .section-header h2 {
   font-family: var(--font-display);
-  font-size: 1.55rem;
+  font-size: var(--text-xl);
   font-weight: 700;
   color: var(--color-primary-dark);
   letter-spacing: -0.5px;
@@ -213,7 +277,7 @@ input, select, textarea { font-family: inherit; }
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   padding: var(--space-md) var(--space-lg);
-  transition: box-shadow var(--transition), transform var(--transition);
+  transition: box-shadow var(--transition), transform var(--transition), border-color var(--transition);
 }
 
 .card:hover {
@@ -249,15 +313,23 @@ input, select, textarea { font-family: inherit; }
 
 .category-label {
   font-family: var(--font-display);
-  font-size: .95rem;
+  font-size: var(--text-sm);
   font-weight: 700;
   color: var(--color-primary-dark);
   margin-bottom: var(--space-md);
   padding-left: var(--space-md);
-  border-left: 3px solid var(--color-primary);
+  border-left: 3px solid var(--color-terracotta);
   letter-spacing: .1px;
   display: flex;
   align-items: center;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.ing-nom {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: var(--text-base);
 }
 
 .ingredient-grid {
@@ -267,18 +339,25 @@ input, select, textarea { font-family: inherit; }
 }
 
 /* ---------------------------------------------------------------------------
-   Recipe cards — avatar + content
+   Recipe cards — initials avatar + terracotta hover accent
    --------------------------------------------------------------------------- */
+.recette-card {
+  border-left: 3px solid transparent;
+  transition: box-shadow var(--transition), transform var(--transition),
+              border-left-color var(--transition);
+}
+.recette-card:hover { border-left-color: var(--color-terracotta); }
+
 .recette-nom {
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: var(--text-md);
   font-weight: 700;
   color: var(--color-primary-dark);
   letter-spacing: -0.2px;
 }
 
 .recette-desc {
-  font-size: .85rem;
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
   margin-top: var(--space-xs);
   line-height: 1.5;
@@ -288,7 +367,7 @@ input, select, textarea { font-family: inherit; }
 .recette-avatar {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: var(--radius-sm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -311,10 +390,10 @@ input, select, textarea { font-family: inherit; }
 }
 
 .rec-tag {
-  background: var(--color-accent);
-  color: var(--color-primary-dark);
+  background: var(--color-terracotta-light);
+  color: var(--color-terracotta-dark);
   border-radius: 999px;
-  font-size: .7rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   padding: 2px 10px;
   letter-spacing: .3px;
@@ -329,7 +408,7 @@ input, select, textarea { font-family: inherit; }
   background: var(--color-accent);
   color: var(--color-primary-dark);
   border-radius: 999px;
-  font-size: .72rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   padding: 3px 10px;
   letter-spacing: .3px;
@@ -350,9 +429,9 @@ input, select, textarea { font-family: inherit; }
   border: none;
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
-  font-size: .875rem;
-  font-weight: 500;
-  padding: 8px 16px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: 9px 18px;
   transition:
     background var(--transition),
     box-shadow var(--transition),
@@ -360,17 +439,18 @@ input, select, textarea { font-family: inherit; }
   line-height: 1;
   letter-spacing: .15px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
 
 .btn-primary {
-  background: var(--color-primary);
+  background: var(--color-terracotta);
   color: white;
 }
 .btn-primary:hover {
-  background: var(--color-primary-dark);
-  box-shadow: 0 4px 14px rgba(74,99,85,.32);
+  background: var(--color-terracotta-dark);
+  box-shadow: 0 4px 14px rgba(196,112,79,.35);
   transform: translateY(-1px);
 }
 
@@ -395,11 +475,11 @@ input, select, textarea { font-family: inherit; }
 }
 
 .btn-secondary {
-  background: var(--color-accent-warm);
+  background: var(--color-border);
   color: var(--color-text);
 }
 .btn-secondary:hover {
-  background: var(--color-border);
+  background: var(--color-border-light);
   transform: translateY(-1px);
 }
 
@@ -407,12 +487,13 @@ input, select, textarea { font-family: inherit; }
   background: none;
   color: var(--color-primary);
   padding: 4px 6px;
-  font-size: .85rem;
+  font-size: var(--text-sm);
+  font-weight: 500;
 }
 .btn-link:hover { color: var(--color-primary-dark); }
 
-.btn-sm { padding: 5px 12px; font-size: .8rem; }
-.btn-xs { padding: 3px 8px; font-size: .75rem; border-radius: 4px; }
+.btn-sm { padding: 6px 14px; font-size: var(--text-xs); }
+.btn-xs { padding: 3px 8px;  font-size: var(--text-xs); border-radius: 4px; }
 
 /* ---------------------------------------------------------------------------
    Forms
@@ -425,11 +506,11 @@ input, select, textarea { font-family: inherit; }
 }
 
 .form-group label {
-  font-size: .75rem;
-  font-weight: 600;
+  font-size: var(--text-xs);
+  font-weight: 700;
   color: var(--color-text-muted);
   text-transform: uppercase;
-  letter-spacing: .55px;
+  letter-spacing: .06em;
 }
 
 .form-group input,
@@ -438,8 +519,8 @@ input, select, textarea { font-family: inherit; }
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
-  font-size: .95rem;
-  padding: 9px 12px;
+  font-size: var(--text-base);
+  padding: 10px 13px;
   outline: none;
   transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
   background: var(--color-surface-warm);
@@ -471,22 +552,22 @@ input, select, textarea { font-family: inherit; }
 .prix-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: .82rem;
+  font-size: var(--text-xs);
   margin-top: var(--space-sm);
 }
 
 .prix-table th {
   background: var(--color-accent);
   color: var(--color-primary-dark);
-  font-weight: 600;
+  font-weight: 700;
   padding: 6px 10px;
   text-align: left;
-  font-size: .73rem;
-  letter-spacing: .45px;
+  font-size: var(--text-xs);
+  letter-spacing: .5px;
   text-transform: uppercase;
 }
 
-.prix-table td { padding: 6px 10px; border-bottom: 1px solid var(--color-border-light); }
+.prix-table td { padding: 7px 10px; border-bottom: 1px solid var(--color-border-light); }
 .prix-table tr:last-child td { border-bottom: none; }
 
 .prix-form {
@@ -505,7 +586,7 @@ input, select, textarea { font-family: inherit; }
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
-  font-size: .82rem;
+  font-size: var(--text-sm);
   padding: 5px 8px;
   flex: 1 1 100px;
   min-width: 80px;
@@ -529,7 +610,7 @@ input, select, textarea { font-family: inherit; }
 
 .cal-week-title {
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: var(--text-md);
   font-weight: 700;
   color: var(--color-primary-dark);
   flex: 1;
@@ -539,8 +620,8 @@ input, select, textarea { font-family: inherit; }
 
 .cal-grid {
   display: grid;
-  grid-template-columns: 100px repeat(7, 1fr);
-  gap: 6px;
+  grid-template-columns: 90px repeat(7, 1fr);
+  gap: 5px;
   min-width: 600px;
   overflow-x: auto;
 }
@@ -551,20 +632,20 @@ input, select, textarea { font-family: inherit; }
   border-radius: var(--radius-sm);
   padding: 10px 6px;
   text-align: center;
-  font-size: .75rem;
-  font-weight: 600;
+  font-size: var(--text-xs);
+  font-weight: 700;
   letter-spacing: .35px;
 }
 
 .cal-header-cell:first-child { background: transparent; }
 
-.cal-day-name  { display: block; font-weight: 700; }
-.cal-day-date  { display: block; font-size: .7rem; opacity: .8; margin-top: 2px; }
+.cal-day-name  { display: block; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.cal-day-date  { display: block; font-size: var(--text-xs); opacity: .75; margin-top: 2px; font-weight: 400; }
 
 .cal-row-label {
   display: flex;
   align-items: center;
-  font-size: .72rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   color: var(--color-text-muted);
   padding: 6px 8px;
@@ -572,12 +653,12 @@ input, select, textarea { font-family: inherit; }
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   text-transform: uppercase;
-  letter-spacing: .5px;
+  letter-spacing: .06em;
 }
 
 .cal-cell {
   border-radius: var(--radius-sm);
-  min-height: 78px;
+  min-height: 82px;
   cursor: pointer;
   transition: box-shadow var(--transition), transform var(--transition);
   position: relative;
@@ -593,7 +674,7 @@ input, select, textarea { font-family: inherit; }
 }
 
 .cal-cell-empty:hover {
-  background: var(--color-accent);
+  background: #EFF5EF;
   border-style: solid;
   border-color: var(--color-primary-light);
   transform: translateY(-2px);
@@ -601,7 +682,7 @@ input, select, textarea { font-family: inherit; }
 }
 
 .cal-add-hint {
-  font-size: .7rem;
+  font-size: var(--text-xs);
   color: var(--color-text-light);
 }
 
@@ -609,7 +690,7 @@ input, select, textarea { font-family: inherit; }
 .cal-cell-filled {
   background: white;
   border: 1px solid var(--color-primary-light);
-  border-left: 3px solid var(--color-primary);
+  border-left: 3px solid var(--color-terracotta);
   color: var(--color-text);
   display: flex;
   flex-direction: column;
@@ -624,14 +705,14 @@ input, select, textarea { font-family: inherit; }
 
 .cal-meal-name {
   font-family: var(--font-display);
-  font-size: .82rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   color: var(--color-primary-dark);
   line-height: 1.25;
 }
 
 .cal-meal-persons {
-  font-size: .72rem;
+  font-size: var(--text-xs);
   color: var(--color-text-muted);
   font-weight: 500;
 }
@@ -677,7 +758,7 @@ input, select, textarea { font-family: inherit; }
   font-weight: 700;
   color: var(--color-primary-dark);
   flex: 1;
-  font-size: .95rem;
+  font-size: var(--text-sm);
   letter-spacing: -0.1px;
 }
 
@@ -687,18 +768,18 @@ input, select, textarea { font-family: inherit; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, #5D7D69 100%);
   color: white;
   padding: var(--space-md) var(--space-lg);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-lg);
   font-weight: 600;
-  box-shadow: 0 4px 18px rgba(74,99,85,.28);
+  box-shadow: 0 6px 24px rgba(74,99,85,.28);
 }
 
 .courses-total-amount {
   font-family: var(--font-display);
-  font-size: 1.6rem;
+  font-size: 1.7rem;
   font-weight: 700;
 }
 
@@ -708,35 +789,35 @@ input, select, textarea { font-family: inherit; }
 .courses-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: .88rem;
+  font-size: var(--text-sm);
 }
 
 .courses-table th {
   background: var(--color-accent);
   color: var(--color-primary-dark);
-  font-weight: 600;
+  font-weight: 700;
   padding: 8px 14px;
   text-align: left;
-  font-size: .73rem;
-  letter-spacing: .5px;
+  font-size: var(--text-xs);
+  letter-spacing: .06em;
   text-transform: uppercase;
 }
 
 .courses-table th.text-center { text-align: center; }
 
 .courses-table td {
-  padding: 10px 14px;
+  padding: 11px 14px;
   border-bottom: 1px solid var(--color-border-light);
 }
 
-/* Shopping list rows — toggle check-off on click (only in category tables) */
+/* Shopping list rows — check-off on click */
 .courses-category .courses-table tbody tr {
   cursor: pointer;
   transition: opacity 0.25s var(--ease), background 0.15s;
 }
 
 .courses-category .courses-table tbody tr:nth-child(even) td { background: var(--color-surface-warm); }
-.courses-category .courses-table tbody tr:hover td { background: var(--color-accent); }
+.courses-category .courses-table tbody tr:hover td { background: #EFF5EF; }
 
 /* Animated check circle */
 .courses-category .courses-table tbody td:first-child::before {
@@ -744,7 +825,6 @@ input, select, textarea { font-family: inherit; }
   color: var(--color-primary-light);
   font-size: .85rem;
   display: inline;
-  transition: color 0.2s, content 0.2s;
 }
 
 .courses-category .courses-table tbody tr.item-checked td { opacity: 0.36; }
@@ -756,6 +836,19 @@ input, select, textarea { font-family: inherit; }
 
 .courses-cout { font-weight: 600; color: var(--color-primary-dark); }
 .text-center { text-align: center; }
+
+/* PDF export button — prominent */
+#btn-export-pdf {
+  background: var(--color-terracotta);
+  border-color: var(--color-terracotta);
+  color: white;
+  font-weight: 700;
+}
+#btn-export-pdf:hover {
+  background: var(--color-terracotta-dark);
+  border-color: var(--color-terracotta-dark);
+  box-shadow: 0 4px 14px rgba(196,112,79,.35);
+}
 
 /* ---------------------------------------------------------------------------
    Recherche & filtres tags (onglet recettes)
@@ -774,8 +867,8 @@ input, select, textarea { font-family: inherit; }
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
-  font-size: .95rem;
-  padding: 9px 14px;
+  font-size: var(--text-base);
+  padding: 10px 14px;
   outline: none;
   background: var(--color-surface-warm);
   color: var(--color-text);
@@ -796,7 +889,7 @@ input, select, textarea { font-family: inherit; }
   border-radius: 999px;
   color: var(--color-text-muted);
   font-family: var(--font-body);
-  font-size: .75rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   padding: 4px 14px;
   cursor: pointer;
@@ -805,15 +898,15 @@ input, select, textarea { font-family: inherit; }
 }
 
 .tag-filter-btn:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  border-color: var(--color-terracotta);
+  color: var(--color-terracotta);
 }
 
 .tag-filter-btn.active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
+  background: var(--color-terracotta);
+  border-color: var(--color-terracotta);
   color: white;
-  box-shadow: 0 2px 8px rgba(124,154,126,.3);
+  box-shadow: 0 2px 8px rgba(196,112,79,.3);
 }
 
 /* ---------------------------------------------------------------------------
@@ -823,14 +916,15 @@ input, select, textarea { font-family: inherit; }
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(44,44,44,.42);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(42,37,32,.44);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   z-index: 1000;
   align-items: center;
   justify-content: center;
   opacity: 0;
   transition: opacity var(--transition);
+  padding: var(--space-md);
 }
 
 .modal-overlay.modal-visible { opacity: 1; }
@@ -841,11 +935,12 @@ input, select, textarea { font-family: inherit; }
   box-shadow: var(--shadow-xl);
   border: 1px solid var(--color-border-light);
   max-width: 520px;
-  width: 92%;
+  width: 100%;
   max-height: 90vh;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: var(--space-lg) var(--space-xl);
-  transform: translateY(-14px) scale(.97);
+  transform: translateY(-16px) scale(.97);
   transition: transform var(--transition-slow);
 }
 
@@ -862,7 +957,7 @@ input, select, textarea { font-family: inherit; }
 
 .modal-header h2 {
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--color-primary-dark);
   letter-spacing: -0.3px;
@@ -877,58 +972,65 @@ input, select, textarea { font-family: inherit; }
   padding: 2px 6px;
   border-radius: var(--radius-sm);
   transition: background var(--transition), color var(--transition);
+  flex-shrink: 0;
 }
 
 .modal-close:hover { background: var(--color-danger-light); color: var(--color-danger); }
 
+/* FIX 3 — overflow-x hidden on large modal */
 .modal-lg {
   max-width: 740px;
-  /* FIX 3 — prevent horizontal overflow in recipe detail modal */
   overflow-x: hidden;
 }
 
 .modal-section-title {
-  font-size: .72rem;
+  font-size: var(--text-xs);
   font-weight: 700;
-  color: var(--color-primary);
-  border-bottom: 2px solid var(--color-accent);
+  color: var(--color-terracotta);
+  border-bottom: 2px solid var(--color-terracotta-light);
   padding-bottom: var(--space-xs);
   margin: var(--space-lg) 0 var(--space-md);
   text-transform: uppercase;
-  letter-spacing: .9px;
+  letter-spacing: .09em;
 }
 
 .detail-meta {
   color: var(--color-text-muted);
-  font-size: .88rem;
+  font-size: var(--text-sm);
   margin-top: 2px;
 }
 
+/* FIX 3 — table-layout fixed, max-width 100% */
 .detail-table {
   width: 100%;
   max-width: 100%;
   border-collapse: collapse;
-  font-size: .88rem;
+  font-size: var(--text-sm);
   margin-bottom: var(--space-md);
-  /* FIX 3 — fixed layout prevents cell content from expanding the table */
   table-layout: fixed;
 }
 
 .detail-table th {
   background: var(--color-accent);
   color: var(--color-primary-dark);
-  padding: 7px 12px;
+  padding: 8px 12px;
   text-align: left;
-  font-weight: 600;
-  font-size: .72rem;
-  letter-spacing: .5px;
+  font-weight: 700;
+  font-size: var(--text-xs);
+  letter-spacing: .06em;
   text-transform: uppercase;
 }
 
 .detail-table th.text-center { text-align: center; }
-.detail-table td { padding: 7px 12px; border-bottom: 1px solid var(--color-border-light); }
+.detail-table td { padding: 8px 12px; border-bottom: 1px solid var(--color-border-light); overflow: hidden; text-overflow: ellipsis; }
 .detail-table td.text-center { text-align: center; }
 .detail-table tr:last-child td { border-bottom: none; }
+
+/* Column widths: name 40%, qty 18%, unit 18%, action 24% */
+.detail-table th:nth-child(1), .detail-table td:nth-child(1) { width: 40%; }
+.detail-table th:nth-child(2), .detail-table td:nth-child(2) { width: 18%; }
+.detail-table th:nth-child(3), .detail-table td:nth-child(3) { width: 18%; }
+.detail-table th:nth-child(4), .detail-table td:nth-child(4) { width: 24%; }
 
 .ri-form {
   display: grid;
@@ -955,7 +1057,7 @@ input, select, textarea { font-family: inherit; }
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
-  font-size: .85rem;
+  font-size: var(--text-sm);
   padding: 6px 8px;
   background: var(--color-surface-warm);
   color: var(--color-text);
@@ -967,7 +1069,6 @@ input, select, textarea { font-family: inherit; }
 .ri-row input[type="number"] { flex: 0 0 80px; }
 .ri-row input[type="text"] { flex: 0 0 65px; }
 
-/* FIX 2 — center × icon in delete button */
 .ri-row .btn-danger {
   flex: 0 0 auto;
   display: flex;
@@ -978,18 +1079,17 @@ input, select, textarea { font-family: inherit; }
   padding: 0;
 }
 
-.ri-row select:focus,
-.ri-row input:focus {
+.ri-row select:focus, .ri-row input:focus {
   border-color: var(--color-primary);
   background: white;
 }
 
-/* Inline edit inputs */
+/* FIX 4 — inline edit inputs constrained to cell */
 .inline-input {
   border: 1.5px solid var(--color-primary-light);
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
-  font-size: .85rem;
+  font-size: var(--text-sm);
   padding: 4px 7px;
   background: white;
   color: var(--color-text);
@@ -1002,7 +1102,7 @@ input, select, textarea { font-family: inherit; }
   box-shadow: 0 0 0 2px rgba(124,154,126,.18);
 }
 
-/* FIX 4 — inline input constrained to table cell width */
+/* FIX 4 — cell-scoped inline input */
 .inline-input--cell {
   width: 100%;
   max-width: 100%;
@@ -1010,7 +1110,7 @@ input, select, textarea { font-family: inherit; }
   box-sizing: border-box;
 }
 
-/* FIX 4 — action buttons in detail table: flex row, compact, no wrap */
+/* FIX 4 — compact action buttons in detail table */
 .ri-actions {
   display: flex;
   gap: var(--space-xs);
@@ -1018,18 +1118,51 @@ input, select, textarea { font-family: inherit; }
   flex-wrap: wrap;
 }
 
-/* Column widths for recipe detail table (FIX 3 + FIX 4) */
-.detail-table th:nth-child(1),
-.detail-table td:nth-child(1) { width: 40%; }
-.detail-table th:nth-child(2),
-.detail-table td:nth-child(2) { width: 18%; }
-.detail-table th:nth-child(3),
-.detail-table td:nth-child(3) { width: 18%; }
-.detail-table th:nth-child(4),
-.detail-table td:nth-child(4) { width: 24%; }
+/* ---------------------------------------------------------------------------
+   Empty / loading states — with centered SVG illustration slot
+   --------------------------------------------------------------------------- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  color: var(--color-text-muted);
+  padding: var(--space-2xl) var(--space-xl);
+  text-align: center;
+}
+
+.empty-state svg {
+  width: 64px;
+  height: 64px;
+  opacity: 0.25;
+  color: var(--color-primary);
+}
+
+.empty-state p {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-style: italic;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.empty-state small {
+  font-size: var(--text-sm);
+  color: var(--color-text-light);
+}
+
+.loading-text { color: var(--color-text-light); font-size: var(--text-sm); font-style: italic; }
+.error-text   { color: var(--color-danger); font-size: var(--text-sm); }
+
+.empty-cell {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-style: italic;
+  padding: var(--space-md) !important;
+}
 
 /* ---------------------------------------------------------------------------
-   Toasts
+   Toasts & FK alert
    --------------------------------------------------------------------------- */
 #toast-container {
   position: fixed;
@@ -1039,7 +1172,7 @@ input, select, textarea { font-family: inherit; }
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  max-width: 340px;
+  max-width: 360px;
 }
 
 .toast {
@@ -1049,7 +1182,7 @@ input, select, textarea { font-family: inherit; }
   padding: var(--space-md) var(--space-lg);
   box-shadow: var(--shadow-lg);
   font-family: var(--font-body);
-  font-size: .875rem;
+  font-size: var(--text-sm);
   font-weight: 500;
   opacity: 0;
   transform: translateX(20px);
@@ -1060,7 +1193,7 @@ input, select, textarea { font-family: inherit; }
 .toast-error   { background: var(--color-danger); }
 .toast-success { background: var(--color-success); }
 
-/* FK constraint alert — fond rouge clair, texte explicite */
+/* FIX 2 — FK constraint alert: fond rouge clair, texte explicite */
 .fk-alert {
   background: var(--color-danger-light);
   color: var(--color-danger);
@@ -1069,40 +1202,19 @@ input, select, textarea { font-family: inherit; }
   padding: var(--space-md) var(--space-lg);
   box-shadow: var(--shadow-lg);
   font-family: var(--font-body);
-  font-size: .875rem;
+  font-size: var(--text-sm);
   opacity: 0;
   transform: translateX(20px);
   transition: opacity .25s var(--ease), transform .25s var(--ease);
-  max-width: 340px;
+  max-width: 360px;
 }
 .fk-alert strong {
   display: block;
-  font-size: .9rem;
+  font-size: var(--text-sm);
+  font-weight: 700;
   margin-bottom: var(--space-xs);
 }
-.fk-alert p { margin: 0; font-size: .82rem; line-height: 1.45; }
-
-/* ---------------------------------------------------------------------------
-   Empty / loading / error states
-   --------------------------------------------------------------------------- */
-.empty-state {
-  color: var(--color-text-muted);
-  font-family: var(--font-display);
-  font-size: 1rem;
-  text-align: center;
-  padding: var(--space-2xl) var(--space-xl);
-  font-style: italic;
-}
-
-.loading-text { color: var(--color-text-light); font-size: .88rem; font-style: italic; }
-.error-text   { color: var(--color-danger); font-size: .88rem; }
-
-.empty-cell {
-  text-align: center;
-  color: var(--color-text-muted);
-  font-style: italic;
-  padding: var(--space-md) !important;
-}
+.fk-alert p { margin: 0; font-size: var(--text-xs); line-height: 1.5; }
 
 /* ---------------------------------------------------------------------------
    Budget
@@ -1118,11 +1230,11 @@ input, select, textarea { font-family: inherit; }
 
 .budget-panel-title {
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: var(--text-md);
   color: var(--color-primary-dark);
   margin: 0 0 var(--space-md) 0;
   padding-bottom: var(--space-sm);
-  border-bottom: 2px solid var(--color-accent);
+  border-bottom: 2px solid var(--color-terracotta-light);
 }
 
 .budget-form-grid {
@@ -1142,8 +1254,8 @@ input, select, textarea { font-family: inherit; }
 
 .budget-kpi {
   background: var(--color-bg);
-  border-radius: var(--radius-sm);
-  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
   text-align: center;
   border: 1px solid var(--color-border-light);
 }
@@ -1152,22 +1264,23 @@ input, select, textarea { font-family: inherit; }
 
 .budget-kpi-label {
   display: block;
-  font-size: .72rem;
+  font-size: var(--text-xs);
   color: var(--color-text-muted);
-  margin-bottom: 3px;
+  margin-bottom: 4px;
   text-transform: uppercase;
-  letter-spacing: .04em;
+  letter-spacing: .06em;
+  font-weight: 600;
 }
 
 .budget-kpi-value {
   display: block;
   font-family: var(--font-display);
-  font-size: 1.35rem;
+  font-size: 1.4rem;
   color: var(--color-text);
   line-height: 1.1;
 }
 
-/* Progress bar */
+/* Animated progress bar */
 .budget-progress-wrap {
   height: 10px;
   background: var(--color-border-light);
@@ -1176,24 +1289,30 @@ input, select, textarea { font-family: inherit; }
   margin-bottom: 6px;
 }
 
+@keyframes progressFill {
+  from { width: 0; }
+}
+
 .budget-progress-bar {
   height: 100%;
   border-radius: 99px;
+  animation: progressFill 0.85s var(--ease) both;
   transition: width var(--transition-slow);
 }
 
-.budget-progress--ok      { background: var(--color-primary); }
-.budget-progress--warning { background: var(--color-warning); }
-.budget-progress--danger  { background: var(--color-danger); }
+.budget-progress--ok      { background: linear-gradient(90deg, var(--color-primary), var(--color-success)); }
+.budget-progress--warning { background: linear-gradient(90deg, var(--color-warning), #E8A050); }
+.budget-progress--danger  { background: linear-gradient(90deg, var(--color-danger), #D44030); }
 
 .budget-progress-label {
-  font-size: .78rem;
+  font-size: var(--text-xs);
   color: var(--color-text-muted);
   text-align: right;
+  font-weight: 500;
 }
 
 .budget-hint {
-  font-size: .82rem;
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
   font-style: italic;
   margin-top: var(--space-sm);
@@ -1219,8 +1338,9 @@ input, select, textarea { font-family: inherit; }
 }
 
 .budget-chart-val {
-  font-size: .62rem;
+  font-size: var(--text-xs);
   color: var(--color-text-muted);
+  font-weight: 500;
 }
 
 .budget-chart-bar-wrap {
@@ -1240,20 +1360,19 @@ input, select, textarea { font-family: inherit; }
 }
 
 .budget-chart-bar--over {
-  background: var(--color-danger-light);
-  border-color: var(--color-danger);
+  background: var(--color-terracotta-light);
+  border-color: var(--color-terracotta);
 }
 
 .budget-chart-lbl {
-  font-size: .62rem;
+  font-size: var(--text-xs);
   color: var(--color-text-muted);
   white-space: nowrap;
 }
 
-/* History table */
 .budget-history-table { margin-top: 0; }
 
-/* Valider button row */
+/* Validate button */
 .btn-valider-courses {
   display: flex;
   justify-content: flex-end;
@@ -1263,21 +1382,27 @@ input, select, textarea { font-family: inherit; }
 }
 
 /* Utilities */
-.text-success { color: var(--color-success); }
-.text-danger  { color: var(--color-danger); }
+.text-success { color: var(--color-success); font-weight: 600; }
+.text-danger  { color: var(--color-danger);  font-weight: 600; }
 
 /* ---------------------------------------------------------------------------
-   Responsive
+   Responsive — mobile-first, breakpoint 768px
    --------------------------------------------------------------------------- */
 @media (max-width: 768px) {
   .tab-content  { padding: var(--space-md); }
-  .app-header   { padding: var(--space-md); }
-  .tab-nav      { padding: 0 var(--space-md); }
+  .app-header   { padding: var(--space-md) var(--space-lg); }
+  .tab-nav      { padding: 0 var(--space-sm); }
+  .tab-btn      { padding: 8px var(--space-sm); min-width: 58px; font-size: 0.65rem; }
+  .tab-btn svg  { width: 16px; height: 16px; }
+
   .section-header { flex-direction: column; align-items: flex-start; gap: var(--space-sm); }
   .ingredient-grid { grid-template-columns: 1fr; }
-  .cal-grid { grid-template-columns: 80px repeat(7, minmax(70px, 1fr)); }
+  .cal-grid { grid-template-columns: 70px repeat(7, minmax(65px, 1fr)); }
   .ri-form { grid-template-columns: 1fr 1fr; }
   .courses-controls { flex-direction: column; align-items: flex-start; }
   .section-search   { flex-direction: column; }
   .search-input     { width: 100%; }
+  .budget-form-grid { grid-template-columns: 1fr; }
+  .modal { padding: var(--space-md); }
+  .app-subtitle { display: none; }
 }
