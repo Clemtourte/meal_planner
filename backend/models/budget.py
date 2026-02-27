@@ -1,7 +1,7 @@
 """Schémas Pydantic pour la gestion du budget alimentaire."""
 
 from datetime import date
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel
 
@@ -9,7 +9,7 @@ from pydantic import BaseModel
 class BudgetCreate(BaseModel):
     """Payload pour créer ou remplacer un budget."""
 
-    type: str  # 'hebdomadaire' | 'mensuel'
+    type: Literal["hebdomadaire", "mensuel"]
     montant: float
     date_debut: date
 

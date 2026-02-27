@@ -277,10 +277,28 @@ async def update_recette(
 
 @router.delete("/{recette_id}", status_code=204)
 async def delete_recette(recette_id: UUID, db: Client = Depends(get_supabase)) -> None:
-    """Supprime une recette et ses associations d'ingrédients (cascade)."""
-    await _run(
-        lambda: db.table("recettes").delete().eq("id", str(recette_id)).execute()
-    )
+    """Supprime une recette et ses associations d'ingrédients (cascade).
+
+    Retourne 409 si la recette est encore référencée dans le calendrier.
+    """
+    try:
+        await _run(
+            lambda: db.table("recettes").delete().eq("id", str(recette_id)).execute()
+        )
+    except Exception as exc:
+        exc_str = str(exc).lower()
+        if "23503" in exc_str or "foreign key" in exc_str or "violates" in exc_str:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "Cette recette est planifiée dans le calendrier. "
+                    "Retirez-la du calendrier avant de la supprimer."
+                ),
+            ) from exc
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erreur lors de la suppression : {exc}",
+        ) from exc
 
 
 # ---------------------------------------------------------------------------

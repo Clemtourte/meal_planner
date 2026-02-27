@@ -103,3 +103,43 @@ def test_post_recettes_simple_not_405(client: TestClient) -> None:
         assert response.status_code == 201
     finally:
         app.dependency_overrides.clear()
+
+
+def test_delete_recette_fk_409(client: TestClient) -> None:
+    """DELETE sur une recette planifiée dans le calendrier → 409 Conflict."""
+
+    def _raise_fk(*args, **kwargs):
+        raise Exception("violates foreign key constraint")
+
+    mock = MagicMock()
+    mock.table.return_value.delete.return_value.eq.return_value.execute.side_effect = (
+        _raise_fk
+    )
+
+    app.dependency_overrides[get_supabase] = lambda: mock
+    try:
+        response = client.delete(f"/api/recettes/{_REC_ID}")
+        assert response.status_code == 409
+        assert "calendrier" in response.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_delete_ingredient_fk_409(client: TestClient) -> None:
+    """DELETE sur un ingrédient utilisé dans une recette → 409 Conflict."""
+
+    def _raise_fk(*args, **kwargs):
+        raise Exception("violates foreign key constraint (23503)")
+
+    mock = MagicMock()
+    mock.table.return_value.delete.return_value.eq.return_value.execute.side_effect = (
+        _raise_fk
+    )
+
+    app.dependency_overrides[get_supabase] = lambda: mock
+    try:
+        response = client.delete(f"/api/ingredients/{_ING_ID}")
+        assert response.status_code == 409
+        assert "recette" in response.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.clear()
