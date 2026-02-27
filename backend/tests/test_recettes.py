@@ -42,8 +42,7 @@ def _mock_recettes_db() -> MagicMock:
                 recette_result
             )
             (
-                tbl.select.return_value.eq.return_value.order.return_value
-                .execute.return_value
+                tbl.select.return_value.eq.return_value.order.return_value.execute.return_value
             ) = recette_result
         elif table_name == "recette_ingredients":
             tbl.select.return_value.eq.return_value.execute.return_value = ri_result
