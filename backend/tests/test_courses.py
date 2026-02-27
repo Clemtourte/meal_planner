@@ -15,7 +15,7 @@ def test_aggregation_same_unit() -> None:
 
 
 def test_aggregation_portion_ratio() -> None:
-    """Recette 4 portions planifiée pour 2 personnes → ratio 0.5 → quantité divisée par 2."""
+    """Recette 4 portions planifiée pour 2 personnes → ratio 0.5 → quantité / 2."""
     quantite_recette = 400.0
     nb_personnes = 2
     nb_portions = 4
