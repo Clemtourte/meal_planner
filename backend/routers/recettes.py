@@ -167,9 +167,7 @@ async def get_recette_cout(
     le coût par portion et le détail par ingrédient.
     """
     recette_result = await _run(
-        lambda: (
-            db.table("recettes").select("*").eq("id", str(recette_id)).execute()
-        )
+        lambda: db.table("recettes").select("*").eq("id", str(recette_id)).execute()
     )
     if not recette_result.data:
         raise HTTPException(status_code=404, detail="Recette introuvable")
@@ -229,9 +227,7 @@ async def get_recette_cout(
             )
             continue
 
-        best_p, best_ref_qty = min(
-            compatible, key=lambda x: float(x[0]["prix"]) / x[1]
-        )
+        best_p, best_ref_qty = min(compatible, key=lambda x: float(x[0]["prix"]) / x[1])
         cout_ing = (float(best_p["prix"]) / best_ref_qty) * norm_qty
         cout_total += cout_ing
         has_prix = True

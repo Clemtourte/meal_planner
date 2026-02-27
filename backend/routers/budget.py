@@ -108,9 +108,7 @@ async def add_historique(
         "magasin_choisi": payload.magasin_choisi,
         "user_id": user_id,
     }
-    result = await _run(
-        lambda: db.table("historique_depenses").insert(data).execute()
-    )
+    result = await _run(lambda: db.table("historique_depenses").insert(data).execute())
     if not result.data:
         raise HTTPException(
             status_code=400, detail="Échec de l'enregistrement de la dépense"

@@ -105,10 +105,7 @@ async def delete_ingredient(
     try:
         await _run(
             lambda: (
-                db.table("ingredients")
-                .delete()
-                .eq("id", str(ingredient_id))
-                .execute()
+                db.table("ingredients").delete().eq("id", str(ingredient_id)).execute()
             )
         )
     except Exception as exc:
