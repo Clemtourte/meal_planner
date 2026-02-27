@@ -181,12 +181,13 @@ function _renderPrix(ingId, prix) {
       : prix
           .map(
             (p) => `
-          <tr>
-            <td>${_esc(p.magasin)}</td>
-            <td>${parseFloat(p.prix).toFixed(2)} €</td>
-            <td>${p.quantite_reference} ${_esc(p.unite_reference)}</td>
-            <td>${(parseFloat(p.prix) / parseFloat(p.quantite_reference)).toFixed(3)} €/${_esc(p.unite_reference)}</td>
-            <td>
+          <tr id="prix-row-${p.id}">
+            <td id="prix-mag-${p.id}">${_esc(p.magasin)}</td>
+            <td id="prix-val-${p.id}">${parseFloat(p.prix).toFixed(2)} €</td>
+            <td id="prix-qty-${p.id}">${p.quantite_reference} ${_esc(p.unite_reference)}</td>
+            <td id="prix-pu-${p.id}">${(parseFloat(p.prix) / parseFloat(p.quantite_reference)).toFixed(3)} €/${_esc(p.unite_reference)}</td>
+            <td id="prix-act-${p.id}">
+              <button class="btn btn-xs btn-outline" onclick="editPrix('${ingId}', '${p.id}', '${_esc(p.magasin)}', ${p.prix}, ${p.quantite_reference}, '${_esc(p.unite_reference)}')">Modifier</button>
               <button class="btn btn-xs btn-danger" onclick="deletePrix('${ingId}', '${p.id}')">×</button>
             </td>
           </tr>`
@@ -209,6 +210,42 @@ function _renderPrix(ingId, prix) {
       <input type="text"   name="unite_reference"     placeholder="Unité (ex: kg)" required>
       <button type="submit" class="btn btn-sm btn-primary">+ Ajouter</button>
     </form>`;
+}
+
+function editPrix(ingId, prixId, magasin, prix, qtyRef, uniteRef) {
+  document.getElementById(`prix-mag-${prixId}`).innerHTML =
+    `<input type="text" value="${_esc(magasin)}" id="e-mag-${prixId}" class="inline-input" style="width:80px" />`;
+  document.getElementById(`prix-val-${prixId}`).innerHTML =
+    `<input type="number" value="${prix}" step="0.01" min="0" id="e-val-${prixId}" class="inline-input" style="width:60px" /> €`;
+  document.getElementById(`prix-qty-${prixId}`).innerHTML =
+    `<input type="number" value="${qtyRef}" step="0.001" min="0" id="e-qty-${prixId}" class="inline-input" style="width:55px" />
+     <input type="text" value="${_esc(uniteRef)}" id="e-unite-${prixId}" class="inline-input" style="width:42px" />`;
+  document.getElementById(`prix-pu-${prixId}`).innerHTML = "—";
+  document.getElementById(`prix-act-${prixId}`).innerHTML = `
+    <button class="btn btn-xs btn-primary" onclick="savePrix('${ingId}', '${prixId}')">Sauvegarder</button>
+    <button class="btn btn-xs btn-secondary" onclick="_loadAndRenderPrix('${ingId}')">Annuler</button>
+  `;
+}
+
+async function savePrix(ingId, prixId) {
+  const magasin = document.getElementById(`e-mag-${prixId}`).value.trim();
+  const prix = parseFloat(document.getElementById(`e-val-${prixId}`).value);
+  const quantite_reference = parseFloat(document.getElementById(`e-qty-${prixId}`).value);
+  const unite_reference = document.getElementById(`e-unite-${prixId}`).value.trim();
+
+  if (!magasin || isNaN(prix) || prix <= 0 || isNaN(quantite_reference) || quantite_reference <= 0 || !unite_reference) {
+    showToast("Données invalides", "error");
+    return;
+  }
+  try {
+    await apiPatch(`/ingredients/${ingId}/prix/${prixId}`, {
+      magasin, prix, quantite_reference, unite_reference,
+    });
+    showToast("Prix mis à jour ✓");
+    await _loadAndRenderPrix(ingId);
+  } catch (err) {
+    showToast("Erreur : " + err.message, "error");
+  }
 }
 
 async function addPrix(e, ingId) {

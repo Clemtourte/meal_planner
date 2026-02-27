@@ -13,6 +13,7 @@ from backend.models.ingredients import (
     IngredientUpdate,
     IngredientResponse,
     PrixCreate,
+    PrixUpdate,
     PrixResponse,
 )
 
@@ -125,6 +126,29 @@ async def add_prix(
     result = await _run(lambda: db.table("prix").insert(data).execute())
     if not result.data:
         raise HTTPException(status_code=400, detail="Échec de l'ajout du prix")
+    return result.data[0]
+
+
+@router.patch("/{ingredient_id}/prix/{prix_id}", response_model=PrixResponse)
+async def update_prix(
+    ingredient_id: UUID,
+    prix_id: UUID,
+    prix: PrixUpdate,
+    db: Client = Depends(get_supabase),
+) -> dict:
+    """Met à jour les champs d'un prix."""
+    update_data = prix.model_dump(exclude_none=True)
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Aucune donnée à mettre à jour")
+    result = await _run(
+        lambda: db.table("prix")
+        .update(update_data)
+        .eq("id", str(prix_id))
+        .eq("ingredient_id", str(ingredient_id))
+        .execute()
+    )
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Prix introuvable")
     return result.data[0]
 
 

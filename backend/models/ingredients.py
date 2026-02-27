@@ -50,6 +50,15 @@ class PrixCreate(PrixBase):
     pass
 
 
+class PrixUpdate(BaseModel):
+    """Payload de mise à jour partielle d'un prix."""
+
+    magasin: Optional[str] = None
+    prix: Optional[float] = None
+    quantite_reference: Optional[float] = None
+    unite_reference: Optional[str] = None
+
+
 class PrixResponse(PrixBase):
     """Réponse complète d'un prix."""
 
