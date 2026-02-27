@@ -9,6 +9,7 @@ app = FastAPI(
     title="Meal Planner API",
     description="API de planification de repas hebdomadaire",
     version="1.0.0",
+    redirect_slashes=False,
 )
 
 app.add_middleware(

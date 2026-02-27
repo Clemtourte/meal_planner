@@ -10,10 +10,12 @@ from supabase import Client
 from backend.database import get_supabase
 from backend.models.recettes import (
     RecetteCreate,
+    RecetteCreateWithIngredients,
     RecetteUpdate,
     RecetteResponse,
     RecetteDetailResponse,
     RecetteIngredientCreate,
+    RecetteIngredientUpdate,
     RecetteIngredientResponse,
 )
 
@@ -23,6 +25,37 @@ router = APIRouter()
 async def _run(fn: Any) -> Any:
     """Exécute un appel Supabase synchrone dans un thread (async-safe)."""
     return await asyncio.to_thread(fn)
+
+
+async def _get_recette_detail(recette_id: str, db: Client) -> dict:
+    """Charge une recette avec ses ingrédients (jointure PostgREST)."""
+    result = await _run(
+        lambda: db.table("recettes").select("*").eq("id", recette_id).execute()
+    )
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Recette introuvable")
+    recette = result.data[0]
+
+    ri_result = await _run(
+        lambda: db.table("recette_ingredients")
+        .select("*, ingredients(nom)")
+        .eq("recette_id", recette_id)
+        .execute()
+    )
+    ingredients = []
+    for ri in ri_result.data:
+        ing_info = ri.get("ingredients") or {}
+        ingredients.append(
+            {
+                "id": ri["id"],
+                "recette_id": ri["recette_id"],
+                "ingredient_id": ri["ingredient_id"],
+                "quantite": ri["quantite"],
+                "unite": ri["unite"],
+                "ingredient_nom": ing_info.get("nom"),
+            }
+        )
+    return {**recette, "ingredients": ingredients}
 
 
 # ---------------------------------------------------------------------------
@@ -40,47 +73,58 @@ async def list_recettes(db: Client = Depends(get_supabase)) -> list[dict]:
 async def create_recette(
     recette: RecetteCreate, db: Client = Depends(get_supabase)
 ) -> dict:
-    """Crée une nouvelle recette."""
-    result = await _run(
-        lambda: db.table("recettes").insert(recette.model_dump()).execute()
-    )
+    """Crée une nouvelle recette (sans ingrédients)."""
+    data = recette.model_dump()
+    result = await _run(lambda: db.table("recettes").insert(data).execute())
     if not result.data:
         raise HTTPException(status_code=400, detail="Échec de la création de la recette")
     return result.data[0]
 
 
+@router.post("/with-ingredients", response_model=RecetteDetailResponse, status_code=201)
+async def create_recette_with_ingredients(
+    payload: RecetteCreateWithIngredients, db: Client = Depends(get_supabase)
+) -> dict:
+    """
+    Crée une recette avec tous ses ingrédients en une seule requête.
+
+    Crée d'abord la recette, puis insère chaque ingrédient associé.
+    En cas d'erreur sur les ingrédients, la recette est supprimée (rollback manuel).
+    """
+    recette_data = {
+        "nom": payload.nom,
+        "nb_portions": payload.nb_portions,
+        "description": payload.description,
+        "tags": payload.tags,
+    }
+    result = await _run(lambda: db.table("recettes").insert(recette_data).execute())
+    if not result.data:
+        raise HTTPException(status_code=400, detail="Échec de la création de la recette")
+    recette_id = result.data[0]["id"]
+
+    try:
+        for ing in payload.ingredients:
+            ri_data = ing.model_dump()
+            ri_data["recette_id"] = recette_id
+            ri_data["ingredient_id"] = str(ri_data["ingredient_id"])
+            await _run(lambda d=ri_data: db.table("recette_ingredients").insert(d).execute())
+    except Exception as exc:
+        # Rollback manuel : supprimer la recette (cascade supprime les RI)
+        await _run(
+            lambda: db.table("recettes").delete().eq("id", recette_id).execute()
+        )
+        raise HTTPException(
+            status_code=400,
+            detail=f"Erreur lors de l'ajout des ingrédients : {exc}",
+        ) from exc
+
+    return await _get_recette_detail(recette_id, db)
+
+
 @router.get("/{recette_id}", response_model=RecetteDetailResponse)
 async def get_recette(recette_id: UUID, db: Client = Depends(get_supabase)) -> dict:
     """Retourne une recette avec la liste de ses ingrédients."""
-    result = await _run(
-        lambda: db.table("recettes").select("*").eq("id", str(recette_id)).execute()
-    )
-    if not result.data:
-        raise HTTPException(status_code=404, detail="Recette introuvable")
-    recette = result.data[0]
-
-    ri_result = await _run(
-        lambda: db.table("recette_ingredients")
-        .select("*, ingredients(nom)")
-        .eq("recette_id", str(recette_id))
-        .execute()
-    )
-
-    ingredients = []
-    for ri in ri_result.data:
-        ing_info = ri.get("ingredients") or {}
-        ingredients.append(
-            {
-                "id": ri["id"],
-                "recette_id": ri["recette_id"],
-                "ingredient_id": ri["ingredient_id"],
-                "quantite": ri["quantite"],
-                "unite": ri["unite"],
-                "ingredient_nom": ing_info.get("nom"),
-            }
-        )
-
-    return {**recette, "ingredients": ingredients}
+    return await _get_recette_detail(str(recette_id), db)
 
 
 @router.patch("/{recette_id}", response_model=RecetteResponse)
@@ -138,6 +182,41 @@ async def add_ingredient_to_recette(
             status_code=400, detail="Échec de l'ajout de l'ingrédient à la recette"
         )
     return result.data[0]
+
+
+@router.patch(
+    "/{recette_id}/ingredients/{ri_id}",
+    response_model=RecetteIngredientResponse,
+)
+async def update_ingredient_in_recette(
+    recette_id: UUID,
+    ri_id: UUID,
+    ri: RecetteIngredientUpdate,
+    db: Client = Depends(get_supabase),
+) -> dict:
+    """Met à jour la quantité et/ou l'unité d'un ingrédient dans une recette."""
+    update_data = ri.model_dump(exclude_none=True)
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Aucune donnée à mettre à jour")
+    result = await _run(
+        lambda: db.table("recette_ingredients")
+        .update(update_data)
+        .eq("id", str(ri_id))
+        .eq("recette_id", str(recette_id))
+        .execute()
+    )
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Ingrédient de recette introuvable")
+    # Enrichir avec le nom de l'ingrédient
+    row = result.data[0]
+    ing_result = await _run(
+        lambda: db.table("ingredients")
+        .select("nom")
+        .eq("id", row["ingredient_id"])
+        .execute()
+    )
+    ing_nom = ing_result.data[0]["nom"] if ing_result.data else None
+    return {**row, "ingredient_nom": ing_nom}
 
 
 @router.delete("/{recette_id}/ingredients/{ri_id}", status_code=204)
