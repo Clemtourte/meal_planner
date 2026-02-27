@@ -141,7 +141,16 @@ async function confirmDeleteIngredient(id, nom) {
     await _loadIngredients();
     _renderIngredients();
   } catch (err) {
-    showToast("Erreur : " + err.message, "error");
+    const msg = err.message || "";
+    if (
+      msg.includes("utilisé dans") ||
+      msg.includes("recettes") ||
+      msg.includes("409")
+    ) {
+      showFKError(msg);
+    } else {
+      showToast("Erreur : " + msg, "error");
+    }
   }
 }
 

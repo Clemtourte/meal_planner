@@ -881,7 +881,11 @@ input, select, textarea { font-family: inherit; }
 
 .modal-close:hover { background: var(--color-danger-light); color: var(--color-danger); }
 
-.modal-lg { max-width: 740px; }
+.modal-lg {
+  max-width: 740px;
+  /* FIX 3 — prevent horizontal overflow in recipe detail modal */
+  overflow-x: hidden;
+}
 
 .modal-section-title {
   font-size: .72rem;
@@ -902,9 +906,12 @@ input, select, textarea { font-family: inherit; }
 
 .detail-table {
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
   font-size: .88rem;
   margin-bottom: var(--space-md);
+  /* FIX 3 — fixed layout prevents cell content from expanding the table */
+  table-layout: fixed;
 }
 
 .detail-table th {
@@ -995,6 +1002,32 @@ input, select, textarea { font-family: inherit; }
   box-shadow: 0 0 0 2px rgba(124,154,126,.18);
 }
 
+/* FIX 4 — inline input constrained to table cell width */
+.inline-input--cell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* FIX 4 — action buttons in detail table: flex row, compact, no wrap */
+.ri-actions {
+  display: flex;
+  gap: var(--space-xs);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Column widths for recipe detail table (FIX 3 + FIX 4) */
+.detail-table th:nth-child(1),
+.detail-table td:nth-child(1) { width: 40%; }
+.detail-table th:nth-child(2),
+.detail-table td:nth-child(2) { width: 18%; }
+.detail-table th:nth-child(3),
+.detail-table td:nth-child(3) { width: 18%; }
+.detail-table th:nth-child(4),
+.detail-table td:nth-child(4) { width: 24%; }
+
 /* ---------------------------------------------------------------------------
    Toasts
    --------------------------------------------------------------------------- */
@@ -1026,6 +1059,28 @@ input, select, textarea { font-family: inherit; }
 .toast-visible { opacity: 1; transform: translateX(0); }
 .toast-error   { background: var(--color-danger); }
 .toast-success { background: var(--color-success); }
+
+/* FK constraint alert — fond rouge clair, texte explicite */
+.fk-alert {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  border: 1.5px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-lg);
+  box-shadow: var(--shadow-lg);
+  font-family: var(--font-body);
+  font-size: .875rem;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity .25s var(--ease), transform .25s var(--ease);
+  max-width: 340px;
+}
+.fk-alert strong {
+  display: block;
+  font-size: .9rem;
+  margin-bottom: var(--space-xs);
+}
+.fk-alert p { margin: 0; font-size: .82rem; line-height: 1.45; }
 
 /* ---------------------------------------------------------------------------
    Empty / loading / error states

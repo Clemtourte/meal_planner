@@ -61,6 +61,20 @@ async function apiDelete(path) {
 // Notifications toast
 // ---------------------------------------------------------------------------
 
+/** Affiche une alerte d'erreur contrainte FK (fond rouge clair, texte explicite). */
+function showFKError(message) {
+  const container = document.getElementById("toast-container");
+  const el = document.createElement("div");
+  el.className = "fk-alert";
+  el.innerHTML = `<strong>⚠ Suppression impossible</strong><p>${message}</p>`;
+  container.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("toast-visible"));
+  setTimeout(() => {
+    el.classList.remove("toast-visible");
+    setTimeout(() => el.remove(), 300);
+  }, 7000);
+}
+
 function showToast(message, type = "success") {
   const container = document.getElementById("toast-container");
   const toast = document.createElement("div");
