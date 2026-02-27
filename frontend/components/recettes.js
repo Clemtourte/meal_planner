@@ -241,16 +241,23 @@ async function submitRecetteForm(e) {
       await apiPatch(`/recettes/${_editingRecetteId}`, { nom, nb_portions, description, tags });
       showToast("Recette modifiée ✓");
     } else {
+      // Étape 1 : créer la recette via POST /recettes
+      const recette = await apiPost("/recettes", { nom, nb_portions, description, tags });
+
+      // Étape 2 : ajouter les ingrédients un par un
       const rows = document.querySelectorAll("#rec-ing-rows .ri-row");
-      const ingredients = [];
       for (const row of rows) {
         const ingId = row.querySelector(".ri-row-ingredient").value;
         const quantite = parseFloat(row.querySelector(".ri-row-quantite").value);
         const unite = row.querySelector(".ri-row-unite").value.trim();
         if (!ingId || !unite || isNaN(quantite) || quantite <= 0) continue;
-        ingredients.push({ ingredient_id: ingId, quantite, unite });
+        await apiPost(`/recettes/${recette.id}/ingredients`, {
+          ingredient_id: ingId,
+          quantite,
+          unite,
+        });
       }
-      await apiPost("/recettes/with-ingredients", { nom, nb_portions, description, tags, ingredients });
+
       showToast("Recette créée ✓");
     }
     hideModal("modal-recette");
