@@ -142,6 +142,9 @@ function switchTab(tabName) {
     case "courses":
       initCourses();
       break;
+    case "budget":
+      initBudget();
+      break;
   }
 }
 

@@ -3,6 +3,7 @@
  */
 
 let _coursesWeekStart = null;
+let _lastCoursesData = null;
 
 function initCourses() {
   if (!_coursesWeekStart) {
@@ -73,6 +74,7 @@ async function generateCourses() {
   try {
     const debutStr = _coursesDateToISO(_coursesWeekStart);
     const data = await apiGet(`/courses/?debut=${debutStr}`);
+    _lastCoursesData = { data, debutStr };
     _renderCoursesList(data);
     btnPdf.style.display = "inline-flex";
   } catch (err) {
@@ -155,7 +157,37 @@ function _renderCoursesList(data) {
     })
     .join("");
 
-  container.innerHTML = totalHTML + magasinHTML + categoriesHTML;
+  const validerHTML =
+    data.cout_total_estime !== null
+      ? `<div class="btn-valider-courses">
+           <button class="btn btn-outline" onclick="validateCourses()">
+             ✓ Valider et enregistrer dans l'historique
+           </button>
+         </div>`
+      : "";
+
+  container.innerHTML = totalHTML + magasinHTML + categoriesHTML + validerHTML;
+}
+
+async function validateCourses() {
+  if (!_lastCoursesData) return;
+  const { data, debutStr } = _lastCoursesData;
+  const magasins = Object.entries(data.cout_par_magasin || {});
+  const magasinChoisi =
+    magasins.length > 0
+      ? magasins.sort(([, a], [, b]) => b - a)[0][0]
+      : null;
+
+  try {
+    await apiPost("/budgets/historique", {
+      semaine_debut: debutStr,
+      montant_estime: data.cout_total_estime,
+      magasin_choisi: magasinChoisi,
+    });
+    showToast("Dépense enregistrée dans l'historique ✓");
+  } catch (err) {
+    showToast("Erreur : " + err.message, "error");
+  }
 }
 
 async function exportPdf() {

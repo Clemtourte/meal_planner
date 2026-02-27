@@ -1050,6 +1050,168 @@ input, select, textarea { font-family: inherit; }
 }
 
 /* ---------------------------------------------------------------------------
+   Budget
+   --------------------------------------------------------------------------- */
+.budget-panel {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
+  box-shadow: var(--shadow-xs);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.budget-panel-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--color-primary-dark);
+  margin: 0 0 var(--space-md) 0;
+  padding-bottom: var(--space-sm);
+  border-bottom: 2px solid var(--color-accent);
+}
+
+.budget-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+/* KPI cards */
+.budget-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.budget-kpi {
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  text-align: center;
+  border: 1px solid var(--color-border-light);
+}
+
+.budget-kpi--over .budget-kpi-value { color: var(--color-danger); }
+
+.budget-kpi-label {
+  display: block;
+  font-size: .72rem;
+  color: var(--color-text-muted);
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.budget-kpi-value {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  color: var(--color-text);
+  line-height: 1.1;
+}
+
+/* Progress bar */
+.budget-progress-wrap {
+  height: 10px;
+  background: var(--color-border-light);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.budget-progress-bar {
+  height: 100%;
+  border-radius: 99px;
+  transition: width var(--transition-slow);
+}
+
+.budget-progress--ok      { background: var(--color-primary); }
+.budget-progress--warning { background: var(--color-warning); }
+.budget-progress--danger  { background: var(--color-danger); }
+
+.budget-progress-label {
+  font-size: .78rem;
+  color: var(--color-text-muted);
+  text-align: right;
+}
+
+.budget-hint {
+  font-size: .82rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-top: var(--space-sm);
+}
+
+/* CSS bar chart */
+.budget-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 120px;
+  margin-bottom: var(--space-lg);
+  padding-top: var(--space-sm);
+}
+
+.budget-chart-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  gap: 3px;
+  height: 100%;
+}
+
+.budget-chart-val {
+  font-size: .62rem;
+  color: var(--color-text-muted);
+}
+
+.budget-chart-bar-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.budget-chart-bar {
+  width: 100%;
+  background: var(--color-primary-light);
+  border-radius: 4px 4px 0 0;
+  border: 1px solid var(--color-primary);
+  min-height: 4px;
+  transition: height var(--transition-slow);
+}
+
+.budget-chart-bar--over {
+  background: var(--color-danger-light);
+  border-color: var(--color-danger);
+}
+
+.budget-chart-lbl {
+  font-size: .62rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* History table */
+.budget-history-table { margin-top: 0; }
+
+/* Valider button row */
+.btn-valider-courses {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border-light);
+}
+
+/* Utilities */
+.text-success { color: var(--color-success); }
+.text-danger  { color: var(--color-danger); }
+
+/* ---------------------------------------------------------------------------
    Responsive
    --------------------------------------------------------------------------- */
 @media (max-width: 768px) {
