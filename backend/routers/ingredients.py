@@ -102,9 +102,20 @@ async def delete_ingredient(
     ingredient_id: UUID, db: Client = Depends(get_supabase)
 ) -> None:
     """Supprime un ingrédient et ses prix associés (cascade)."""
-    await _run(
-        lambda: db.table("ingredients").delete().eq("id", str(ingredient_id)).execute()
-    )
+    try:
+        await _run(
+            lambda: (
+                db.table("ingredients")
+                .delete()
+                .eq("id", str(ingredient_id))
+                .execute()
+            )
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erreur lors de la suppression : {exc}",
+        ) from exc
 
 
 # ---------------------------------------------------------------------------

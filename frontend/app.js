@@ -42,9 +42,17 @@ async function apiPatch(path, data) {
 }
 
 async function apiDelete(path) {
-  const res = await fetch(BASE_URL + path, { method: "DELETE" });
+  const url = BASE_URL + path;
+  let res;
+  try {
+    res = await fetch(url, { method: "DELETE" });
+  } catch (networkErr) {
+    console.error(`[DELETE ${url}] Network error:`, networkErr.message);
+    throw networkErr;
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
+    console.error(`[DELETE ${url}] HTTP ${res.status}:`, err.detail);
     throw new Error(err.detail || "Erreur serveur");
   }
 }
