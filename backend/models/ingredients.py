@@ -1,7 +1,8 @@
 """Schémas Pydantic pour les ingrédients et les prix."""
 
-from uuid import UUID
 from typing import Optional
+from uuid import UUID
+
 from pydantic import BaseModel
 
 

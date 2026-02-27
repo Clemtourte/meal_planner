@@ -1,8 +1,9 @@
 """Schémas Pydantic pour le calendrier de repas."""
 
-from uuid import UUID
 from datetime import date
 from typing import Optional
+from uuid import UUID
+
 from pydantic import BaseModel
 
 

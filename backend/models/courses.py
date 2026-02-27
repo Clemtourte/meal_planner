@@ -1,7 +1,8 @@
 """Schémas Pydantic pour la liste de courses."""
 
-from uuid import UUID
 from typing import Optional
+from uuid import UUID
+
 from pydantic import BaseModel
 
 

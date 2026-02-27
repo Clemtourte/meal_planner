@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers import ingredients, recettes, calendrier, courses
+from backend.routers import calendrier, courses, ingredients, recettes
 
 app = FastAPI(
     title="Meal Planner API",
