@@ -9,6 +9,8 @@ from supabase import Client
 
 from backend.database import get_supabase
 from backend.models.recettes import (
+    RecetteCoutIngredient,
+    RecetteCoutResponse,
     RecetteCreate,
     RecetteCreateWithIngredients,
     RecetteDetailResponse,
@@ -18,6 +20,7 @@ from backend.models.recettes import (
     RecetteResponse,
     RecetteUpdate,
 )
+from backend.routers.courses import _to_base
 
 router = APIRouter()
 
@@ -132,6 +135,110 @@ async def create_recette_with_ingredients(
 async def get_recette(recette_id: UUID, db: Client = Depends(get_supabase)) -> dict:
     """Retourne une recette avec la liste de ses ingrédients."""
     return await _get_recette_detail(str(recette_id), db)
+
+
+@router.get("/{recette_id}/cout", response_model=RecetteCoutResponse)
+async def get_recette_cout(
+    recette_id: UUID, db: Client = Depends(get_supabase)
+) -> dict:
+    """
+    Calcule le coût estimé d'une recette.
+
+    Pour chaque ingrédient, recherche le prix le moins cher compatible
+    (unité normalisée) dans la table prix. Retourne le coût total,
+    le coût par portion et le détail par ingrédient.
+    """
+    recette_result = await _run(
+        lambda: (
+            db.table("recettes").select("*").eq("id", str(recette_id)).execute()
+        )
+    )
+    if not recette_result.data:
+        raise HTTPException(status_code=404, detail="Recette introuvable")
+    recette = recette_result.data[0]
+    nb_portions: int = recette["nb_portions"]
+
+    ri_result = await _run(
+        lambda: (
+            db.table("recette_ingredients")
+            .select("*, ingredients(nom)")
+            .eq("recette_id", str(recette_id))
+            .execute()
+        )
+    )
+
+    ingredient_ids = [ri["ingredient_id"] for ri in ri_result.data]
+    prix_result = await _run(
+        lambda: (
+            db.table("prix").select("*").in_("ingredient_id", ingredient_ids).execute()
+        )
+    )
+    prix_by_ingredient: dict[str, list] = {}
+    for p in prix_result.data:
+        prix_by_ingredient.setdefault(p["ingredient_id"], []).append(p)
+
+    detail: list[RecetteCoutIngredient] = []
+    sans_prix: list[str] = []
+    cout_total = 0.0
+    has_prix = False
+
+    for ri in ri_result.data:
+        ing_nom = (ri.get("ingredients") or {}).get("nom")
+        quantite = float(ri["quantite"])
+        unite = ri["unite"]
+        norm_qty, norm_unite = _to_base(quantite, unite)
+
+        prix_list = prix_by_ingredient.get(ri["ingredient_id"], [])
+        compatible = []
+        for p in prix_list:
+            ref_base, ref_unite = _to_base(
+                float(p["quantite_reference"]), p["unite_reference"]
+            )
+            if ref_unite == norm_unite:
+                compatible.append((p, ref_base))
+
+        if not compatible:
+            sans_prix.append(ing_nom or ri["ingredient_id"])
+            detail.append(
+                RecetteCoutIngredient(
+                    ingredient_id=ri["ingredient_id"],
+                    ingredient_nom=ing_nom,
+                    quantite=quantite,
+                    unite=unite,
+                    cout_estime=None,
+                    magasin_moins_cher=None,
+                )
+            )
+            continue
+
+        best_p, best_ref_qty = min(
+            compatible, key=lambda x: float(x[0]["prix"]) / x[1]
+        )
+        cout_ing = (float(best_p["prix"]) / best_ref_qty) * norm_qty
+        cout_total += cout_ing
+        has_prix = True
+        detail.append(
+            RecetteCoutIngredient(
+                ingredient_id=ri["ingredient_id"],
+                ingredient_nom=ing_nom,
+                quantite=quantite,
+                unite=unite,
+                cout_estime=round(cout_ing, 2),
+                magasin_moins_cher=best_p["magasin"],
+            )
+        )
+
+    total = round(cout_total, 2) if has_prix else None
+    par_portion = round(cout_total / nb_portions, 2) if has_prix else None
+
+    return {
+        "recette_id": str(recette_id),
+        "nb_portions": nb_portions,
+        "cout_total": total,
+        "cout_par_portion": par_portion,
+        "ingredients": detail,
+        "ingredients_sans_prix": sans_prix,
+    }
 
 
 @router.patch("/{recette_id}", response_model=RecetteResponse)

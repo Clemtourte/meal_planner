@@ -83,3 +83,25 @@ class RecetteDetailResponse(RecetteResponse):
     """Réponse complète d'une recette avec ses ingrédients."""
 
     ingredients: list[RecetteIngredientResponse] = []
+
+
+class RecetteCoutIngredient(BaseModel):
+    """Coût estimé d'un ingrédient dans une recette."""
+
+    ingredient_id: str
+    ingredient_nom: Optional[str]
+    quantite: float
+    unite: str
+    cout_estime: Optional[float]
+    magasin_moins_cher: Optional[str]
+
+
+class RecetteCoutResponse(BaseModel):
+    """Réponse du calcul du coût estimé d'une recette."""
+
+    recette_id: str
+    nb_portions: int
+    cout_total: Optional[float]
+    cout_par_portion: Optional[float]
+    ingredients: list[RecetteCoutIngredient]
+    ingredients_sans_prix: list[str]
