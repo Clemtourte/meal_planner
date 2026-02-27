@@ -101,7 +101,10 @@ async def update_ingredient(
 async def delete_ingredient(
     ingredient_id: UUID, db: Client = Depends(get_supabase)
 ) -> None:
-    """Supprime un ingrédient et ses prix associés (cascade)."""
+    """Supprime un ingrédient et ses prix associés (cascade).
+
+    Retourne 409 si l'ingrédient est encore référencé dans une recette.
+    """
     try:
         await _run(
             lambda: (
@@ -109,6 +112,15 @@ async def delete_ingredient(
             )
         )
     except Exception as exc:
+        exc_str = str(exc).lower()
+        if "23503" in exc_str or "foreign key" in exc_str or "violates" in exc_str:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "Cet ingrédient est utilisé dans une ou plusieurs recettes. "
+                    "Retirez-le des recettes avant de le supprimer."
+                ),
+            ) from exc
         raise HTTPException(
             status_code=500,
             detail=f"Erreur lors de la suppression : {exc}",
