@@ -67,6 +67,7 @@ function _renderRecettes() {
     <div class="card recette-card" id="recette-card-${r.id}">
       <div class="card-header">
         <div class="card-title">
+          <span class="recette-avatar" style="background:${_avatarColor(r.nom)}">${_escR(r.nom.charAt(0))}</span>
           <span class="recette-nom">${_escR(r.nom)}</span>
           <span class="badge badge-portions">${r.nb_portions} portion${r.nb_portions > 1 ? "s" : ""}</span>
         </div>
@@ -412,4 +413,15 @@ function _escR(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+/** Derive a stable avatar background color from a recipe name. */
+function _avatarColor(nom) {
+  const palette = [
+    "#7C9A7E", "#9B8EA0", "#C09A6B", "#7A9BAA",
+    "#AA8585", "#8FAA7A", "#6B8CA0", "#A09B7A",
+  ];
+  let h = 0;
+  for (let i = 0; i < nom.length; i++) h = (nom.charCodeAt(i) + ((h << 5) - h)) | 0;
+  return palette[Math.abs(h) % palette.length];
 }

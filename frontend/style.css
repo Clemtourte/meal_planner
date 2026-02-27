@@ -1,53 +1,71 @@
-/* =========================================================================
-   Meal Planner — Feuille de style principale
-   ========================================================================= */
+/* =============================================================================
+   Meal Planner — Jardin Culinaire
+   Organic · Natural · Refined
+   Playfair Display (display) + DM Sans (body)
+   ============================================================================= */
 
 /* ---------------------------------------------------------------------------
-   Variables CSS
+   Variables
    --------------------------------------------------------------------------- */
 :root {
-  --color-primary:       #2D6A4F;
-  --color-primary-dark:  #1B4332;
-  --color-primary-light: #52B788;
-  --color-accent:        #B7E4C7;
-  --color-bg:            #F6FAF8;
-  --color-surface:       #FFFFFF;
-  --color-border:        #D8EDE3;
-  --color-text:          #1B2D25;
-  --color-text-muted:    #6B8C7A;
-  --color-danger:        #C0392B;
-  --color-danger-light:  #FDEDEC;
-  --color-warning:       #E67E22;
-  --color-success:       #27AE60;
+  /* Palette */
+  --color-primary:        #7C9A7E;
+  --color-primary-dark:   #4A6355;
+  --color-primary-light:  #B5CDB8;
+  --color-accent:         #D4E6D6;
+  --color-accent-warm:    #EDE8E0;
 
-  --radius-sm:  6px;
-  --radius-md:  10px;
-  --radius-lg:  16px;
+  --color-bg:             #F7F5F0;
+  --color-surface:        #FFFFFF;
+  --color-surface-warm:   #FDFAF5;
 
-  --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
-  --shadow-md: 0 4px 12px rgba(0,0,0,.10);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,.12);
+  --color-border:         #DDD8CC;
+  --color-border-light:   #EDE9E1;
 
+  --color-text:           #2C2C2C;
+  --color-text-muted:     #7A7A6E;
+  --color-text-light:     #B0ADA5;
+
+  --color-danger:         #B5402E;
+  --color-danger-light:   #FAF0EE;
+  --color-success:        #5A9B6A;
+  --color-warning:        #C07B42;
+
+  /* Typography */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  /* Spacing */
   --space-xs:  4px;
   --space-sm:  8px;
   --space-md:  16px;
   --space-lg:  24px;
   --space-xl:  40px;
+  --space-2xl: 64px;
 
-  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  /* Radii */
+  --radius-sm:  6px;
+  --radius-md:  12px;
+  --radius-lg:  20px;
 
-  --transition: 0.18s ease;
+  /* Shadows */
+  --shadow-xs:  0 1px 3px rgba(44,44,44,.05);
+  --shadow-sm:  0 2px 8px rgba(44,44,44,.08);
+  --shadow-md:  0 6px 20px rgba(44,44,44,.11);
+  --shadow-lg:  0 12px 40px rgba(44,44,44,.14);
+  --shadow-xl:  0 24px 64px rgba(44,44,44,.18);
+
+  /* Transitions */
+  --ease:            cubic-bezier(0.4, 0, 0.2, 1);
+  --transition:      0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.36s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ---------------------------------------------------------------------------
    Reset & base
    --------------------------------------------------------------------------- */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { font-size: 16px; scroll-behavior: smooth; }
 
@@ -56,6 +74,8 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   min-height: 100vh;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
 }
 
 a { color: var(--color-primary); text-decoration: none; }
@@ -63,38 +83,78 @@ button { cursor: pointer; font-family: inherit; }
 input, select, textarea { font-family: inherit; }
 
 /* ---------------------------------------------------------------------------
-   Layout principal
+   Header
    --------------------------------------------------------------------------- */
 .app-header {
-  background: var(--color-primary);
-  color: white;
-  padding: var(--space-md) var(--space-xl);
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, #6B8C78 100%);
+  padding: 18px var(--space-xl);
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
 }
 
-.app-header h1 {
-  font-size: 1.4rem;
-  font-weight: 700;
-  letter-spacing: -.3px;
+/* Decorative circles for depth */
+.app-header::before {
+  content: "";
+  position: absolute;
+  right: -30px; top: -50px;
+  width: 180px; height: 180px;
+  background: rgba(255,255,255,.06);
+  border-radius: 50%;
+}
+.app-header::after {
+  content: "";
+  position: absolute;
+  right: 100px; bottom: -60px;
+  width: 140px; height: 140px;
+  background: rgba(255,255,255,.04);
+  border-radius: 50%;
 }
 
 .app-header .logo {
-  font-size: 1.5rem;
+  font-size: 1.7rem;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.2));
+}
+
+.app-header h1 {
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.4px;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 3px rgba(0,0,0,.15);
 }
 
 /* ---------------------------------------------------------------------------
-   Navigation par onglets
+   Tab Navigation
    --------------------------------------------------------------------------- */
 .tab-nav {
   background: var(--color-surface);
-  border-bottom: 2px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   gap: 0;
   padding: 0 var(--space-xl);
   overflow-x: auto;
+  position: relative;
+  box-shadow: var(--shadow-xs);
+}
+
+/* Animated tab indicator pill — positioned via JS */
+#tab-indicator {
+  position: absolute;
+  bottom: 0;
+  height: 3px;
+  background: var(--color-primary);
+  border-radius: 3px 3px 0 0;
+  transition: left var(--transition-slow), width var(--transition-slow);
+  pointer-events: none;
+  z-index: 1;
 }
 
 .tab-btn {
@@ -102,27 +162,32 @@ input, select, textarea { font-family: inherit; }
   border: none;
   border-bottom: 3px solid transparent;
   color: var(--color-text-muted);
-  font-size: .95rem;
+  font-family: var(--font-body);
+  font-size: .875rem;
   font-weight: 500;
   padding: var(--space-md) var(--space-lg);
-  transition: color var(--transition), border-color var(--transition);
+  transition: color var(--transition);
   white-space: nowrap;
-  margin-bottom: -2px;
+  margin-bottom: -1px;
+  letter-spacing: .2px;
 }
 
-.tab-btn:hover { color: var(--color-primary); }
-
-.tab-btn.active {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-  font-weight: 600;
-}
+.tab-btn:hover  { color: var(--color-primary); }
+.tab-btn.active { color: var(--color-primary-dark); font-weight: 600; }
 
 /* ---------------------------------------------------------------------------
-   Contenu des onglets
+   Tab content — with fade-up entry
    --------------------------------------------------------------------------- */
-.tab-content { display: none; padding: var(--space-lg) var(--space-xl); }
-.tab-content.active { display: block; }
+.tab-content { display: none; padding: var(--space-xl); }
+.tab-content.active {
+  display: block;
+  animation: fadeUp 0.3s var(--ease) both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 .section-header {
   display: flex;
@@ -132,28 +197,33 @@ input, select, textarea { font-family: inherit; }
 }
 
 .section-header h2 {
-  font-size: 1.25rem;
+  font-family: var(--font-display);
+  font-size: 1.55rem;
   font-weight: 700;
   color: var(--color-primary-dark);
+  letter-spacing: -0.5px;
 }
 
 /* ---------------------------------------------------------------------------
-   Cartes
+   Cards
    --------------------------------------------------------------------------- */
 .card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
-  padding: var(--space-md);
-  transition: box-shadow var(--transition);
+  padding: var(--space-md) var(--space-lg);
+  transition: box-shadow var(--transition), transform var(--transition);
 }
 
-.card:hover { box-shadow: var(--shadow-md); }
+.card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
 
 .card-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
 }
@@ -163,6 +233,7 @@ input, select, textarea { font-family: inherit; }
   align-items: center;
   gap: var(--space-sm);
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .card-actions {
@@ -172,33 +243,81 @@ input, select, textarea { font-family: inherit; }
 }
 
 /* ---------------------------------------------------------------------------
-   Grilles d'ingrédients & recettes
+   Ingredient cards
    --------------------------------------------------------------------------- */
-.category-group { margin-bottom: var(--space-lg); }
+.category-group { margin-bottom: var(--space-xl); }
 
 .category-label {
-  color: var(--color-primary);
-  font-size: .85rem;
+  font-family: var(--font-display);
+  font-size: .95rem;
   font-weight: 700;
-  letter-spacing: .5px;
-  text-transform: uppercase;
-  margin-bottom: var(--space-sm);
-  padding-left: var(--space-xs);
-  border-left: 3px solid var(--color-primary-light);
-  padding-left: var(--space-sm);
+  color: var(--color-primary-dark);
+  margin-bottom: var(--space-md);
+  padding-left: var(--space-md);
+  border-left: 3px solid var(--color-primary);
+  letter-spacing: .1px;
+  display: flex;
+  align-items: center;
 }
 
 .ingredient-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--space-md);
 }
 
+/* ---------------------------------------------------------------------------
+   Recipe cards — avatar + content
+   --------------------------------------------------------------------------- */
+.recette-nom {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  letter-spacing: -0.2px;
+}
+
 .recette-desc {
-  font-size: .88rem;
+  font-size: .85rem;
   color: var(--color-text-muted);
+  margin-top: var(--space-xs);
+  line-height: 1.5;
+}
+
+/* Initials avatar */
+.recette-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,.18);
+  text-transform: uppercase;
+  user-select: none;
+}
+
+/* Tags */
+.rec-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
   margin-top: var(--space-sm);
-  line-height: 1.4;
+}
+
+.rec-tag {
+  background: var(--color-accent);
+  color: var(--color-primary-dark);
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 600;
+  padding: 2px 10px;
+  letter-spacing: .3px;
 }
 
 /* ---------------------------------------------------------------------------
@@ -210,18 +329,19 @@ input, select, textarea { font-family: inherit; }
   background: var(--color-accent);
   color: var(--color-primary-dark);
   border-radius: 999px;
-  font-size: .75rem;
+  font-size: .72rem;
   font-weight: 600;
-  padding: 2px 10px;
+  padding: 3px 10px;
+  letter-spacing: .3px;
 }
 
 .badge-portions {
-  background: #D4EDDA;
-  color: #155724;
+  background: #E3F0E5;
+  color: var(--color-success);
 }
 
 /* ---------------------------------------------------------------------------
-   Boutons
+   Buttons
    --------------------------------------------------------------------------- */
 .btn {
   display: inline-flex;
@@ -229,66 +349,87 @@ input, select, textarea { font-family: inherit; }
   gap: var(--space-xs);
   border: none;
   border-radius: var(--radius-sm);
+  font-family: var(--font-body);
   font-size: .875rem;
   font-weight: 500;
-  padding: 7px 14px;
-  transition: background var(--transition), opacity var(--transition), box-shadow var(--transition);
+  padding: 8px 16px;
+  transition:
+    background var(--transition),
+    box-shadow var(--transition),
+    transform var(--transition);
   line-height: 1;
+  letter-spacing: .15px;
+  cursor: pointer;
 }
 
-.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
 
 .btn-primary {
   background: var(--color-primary);
   color: white;
 }
-.btn-primary:hover { background: var(--color-primary-dark); }
+.btn-primary:hover {
+  background: var(--color-primary-dark);
+  box-shadow: 0 4px 14px rgba(74,99,85,.32);
+  transform: translateY(-1px);
+}
 
 .btn-outline {
   background: transparent;
   border: 1.5px solid var(--color-primary);
   color: var(--color-primary);
 }
-.btn-outline:hover { background: var(--color-accent); }
+.btn-outline:hover {
+  background: var(--color-accent);
+  transform: translateY(-1px);
+}
 
 .btn-danger {
   background: var(--color-danger);
   color: white;
 }
-.btn-danger:hover { background: #A93226; }
+.btn-danger:hover {
+  background: #9A3423;
+  box-shadow: 0 4px 12px rgba(181,64,46,.28);
+  transform: translateY(-1px);
+}
 
 .btn-secondary {
-  background: var(--color-border);
+  background: var(--color-accent-warm);
   color: var(--color-text);
 }
-.btn-secondary:hover { background: #C8DDD5; }
+.btn-secondary:hover {
+  background: var(--color-border);
+  transform: translateY(-1px);
+}
 
 .btn-link {
   background: none;
   color: var(--color-primary);
   padding: 4px 6px;
   font-size: .85rem;
-  text-decoration: underline;
 }
 .btn-link:hover { color: var(--color-primary-dark); }
 
-.btn-sm { padding: 5px 10px; font-size: .8rem; }
-.btn-xs { padding: 2px 6px; font-size: .75rem; border-radius: 4px; }
+.btn-sm { padding: 5px 12px; font-size: .8rem; }
+.btn-xs { padding: 3px 8px; font-size: .75rem; border-radius: 4px; }
 
 /* ---------------------------------------------------------------------------
-   Formulaires
+   Forms
    --------------------------------------------------------------------------- */
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: 5px;
   margin-bottom: var(--space-md);
 }
 
 .form-group label {
-  font-size: .875rem;
+  font-size: .75rem;
   font-weight: 600;
   color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: .55px;
 }
 
 .form-group input,
@@ -296,30 +437,34 @@ input, select, textarea { font-family: inherit; }
 .form-group textarea {
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm);
+  font-family: var(--font-body);
   font-size: .95rem;
-  padding: 8px 12px;
+  padding: 9px 12px;
   outline: none;
-  transition: border-color var(--transition);
-  background: var(--color-bg);
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+  background: var(--color-surface-warm);
   color: var(--color-text);
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-  border-color: var(--color-primary-light);
+  border-color: var(--color-primary);
   background: white;
+  box-shadow: 0 0 0 3px rgba(124,154,126,.14);
 }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: var(--space-sm);
-  margin-top: var(--space-md);
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border-light);
 }
 
 /* ---------------------------------------------------------------------------
-   Table prix
+   Prix table
    --------------------------------------------------------------------------- */
 .prix-toggle { margin-top: var(--space-sm); }
 
@@ -334,11 +479,14 @@ input, select, textarea { font-family: inherit; }
   background: var(--color-accent);
   color: var(--color-primary-dark);
   font-weight: 600;
-  padding: 5px 8px;
+  padding: 6px 10px;
   text-align: left;
+  font-size: .73rem;
+  letter-spacing: .45px;
+  text-transform: uppercase;
 }
 
-.prix-table td { padding: 5px 8px; border-bottom: 1px solid var(--color-border); }
+.prix-table td { padding: 6px 10px; border-bottom: 1px solid var(--color-border-light); }
 .prix-table tr:last-child td { border-bottom: none; }
 
 .prix-form {
@@ -347,20 +495,26 @@ input, select, textarea { font-family: inherit; }
   gap: var(--space-sm);
   margin-top: var(--space-sm);
   align-items: flex-end;
+  padding: var(--space-sm);
+  background: var(--color-surface-warm);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
 }
 
 .prix-form input {
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm);
+  font-family: var(--font-body);
   font-size: .82rem;
   padding: 5px 8px;
   flex: 1 1 100px;
   min-width: 80px;
-  background: var(--color-bg);
+  background: white;
   outline: none;
+  transition: border-color var(--transition);
 }
 
-.prix-form input:focus { border-color: var(--color-primary-light); background: white; }
+.prix-form input:focus { border-color: var(--color-primary); }
 
 /* ---------------------------------------------------------------------------
    Calendrier
@@ -374,60 +528,65 @@ input, select, textarea { font-family: inherit; }
 }
 
 .cal-week-title {
-  font-size: 1rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
   color: var(--color-primary-dark);
   flex: 1;
   text-align: center;
+  letter-spacing: -0.2px;
 }
 
 .cal-grid {
   display: grid;
-  grid-template-columns: 110px repeat(7, 1fr);
-  gap: 4px;
+  grid-template-columns: 100px repeat(7, 1fr);
+  gap: 6px;
   min-width: 600px;
   overflow-x: auto;
 }
 
 .cal-header-cell {
-  background: var(--color-primary);
+  background: var(--color-primary-dark);
   color: white;
   border-radius: var(--radius-sm);
-  padding: 8px 6px;
+  padding: 10px 6px;
   text-align: center;
-  font-size: .8rem;
+  font-size: .75rem;
   font-weight: 600;
+  letter-spacing: .35px;
 }
 
 .cal-header-cell:first-child { background: transparent; }
 
-.cal-day-name { display: block; font-weight: 700; }
-.cal-day-date { display: block; font-size: .75rem; opacity: .8; margin-top: 2px; }
+.cal-day-name  { display: block; font-weight: 700; }
+.cal-day-date  { display: block; font-size: .7rem; opacity: .8; margin-top: 2px; }
 
 .cal-row-label {
   display: flex;
   align-items: center;
-  font-size: .82rem;
-  font-weight: 600;
+  font-size: .72rem;
+  font-weight: 700;
   color: var(--color-text-muted);
-  padding: 4px 6px;
+  padding: 6px 8px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: .5px;
 }
 
 .cal-cell {
   border-radius: var(--radius-sm);
-  min-height: 72px;
+  min-height: 78px;
   cursor: pointer;
-  transition: background var(--transition), box-shadow var(--transition);
+  transition: box-shadow var(--transition), transform var(--transition);
   position: relative;
-  padding: 6px;
+  padding: 8px;
 }
 
 .cal-cell-empty {
   background: var(--color-surface);
-  border: 2px dashed var(--color-border);
+  border: 1.5px dashed var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -435,46 +594,67 @@ input, select, textarea { font-family: inherit; }
 
 .cal-cell-empty:hover {
   background: var(--color-accent);
+  border-style: solid;
   border-color: var(--color-primary-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .cal-add-hint {
-  font-size: .75rem;
-  color: var(--color-text-muted);
+  font-size: .7rem;
+  color: var(--color-text-light);
 }
 
+/* Mini-card style for filled cells */
 .cal-cell-filled {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
-  color: white;
+  background: white;
+  border: 1px solid var(--color-primary-light);
+  border-left: 3px solid var(--color-primary);
+  color: var(--color-text);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+  box-shadow: var(--shadow-xs);
 }
 
-.cal-cell-filled:hover { box-shadow: var(--shadow-md); }
+.cal-cell-filled:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
 
-.cal-meal-name { font-size: .8rem; font-weight: 600; line-height: 1.2; }
-.cal-meal-persons { font-size: .72rem; opacity: .85; }
+.cal-meal-name {
+  font-family: var(--font-display);
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  line-height: 1.25;
+}
+
+.cal-meal-persons {
+  font-size: .72rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
 
 .cal-delete-btn {
   position: absolute;
-  top: 3px;
-  right: 3px;
-  background: rgba(0,0,0,.2);
-  color: white;
+  top: 4px; right: 4px;
+  background: rgba(181,64,46,.08);
+  color: var(--color-danger);
   border: none;
   border-radius: 50%;
-  width: 18px;
-  height: 18px;
+  width: 20px; height: 20px;
   font-size: .8rem;
-  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
+  opacity: 0;
+  transition: opacity var(--transition), background var(--transition);
 }
 
-.cal-delete-btn:hover { background: var(--color-danger); }
+.cal-cell-filled:hover .cal-delete-btn { opacity: 1; }
+.cal-delete-btn:hover { background: var(--color-danger); color: white; }
 
 /* ---------------------------------------------------------------------------
    Liste de courses
@@ -485,16 +665,20 @@ input, select, textarea { font-family: inherit; }
   gap: var(--space-md);
   flex-wrap: wrap;
   margin-bottom: var(--space-lg);
-  padding: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
 }
 
 .courses-week-label {
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-weight: 700;
   color: var(--color-primary-dark);
   flex: 1;
+  font-size: .95rem;
+  letter-spacing: -0.1px;
 }
 
 .courses-result { margin-top: var(--space-lg); }
@@ -503,196 +687,75 @@ input, select, textarea { font-family: inherit; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
   color: white;
   padding: var(--space-md) var(--space-lg);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-lg);
   font-weight: 600;
+  box-shadow: 0 4px 18px rgba(74,99,85,.28);
 }
 
-.courses-total-amount { font-size: 1.3rem; }
+.courses-total-amount {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+}
 
-.courses-category { margin-bottom: var(--space-lg); }
+.courses-category { margin-bottom: var(--space-xl); }
+.magasin-comparatif { margin-bottom: var(--space-xl); }
 
 .courses-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: .9rem;
+  font-size: .88rem;
 }
 
 .courses-table th {
   background: var(--color-accent);
   color: var(--color-primary-dark);
   font-weight: 600;
-  padding: 8px 12px;
+  padding: 8px 14px;
   text-align: left;
+  font-size: .73rem;
+  letter-spacing: .5px;
+  text-transform: uppercase;
 }
 
 .courses-table th.text-center { text-align: center; }
 
 .courses-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--color-border);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border-light);
 }
 
-.courses-table tr:nth-child(even) td { background: #F8FDFB; }
-.courses-table tr:hover td { background: var(--color-accent); }
-
-.courses-cout { font-weight: 600; color: var(--color-primary); }
-
-.text-center { text-align: center; }
-
-/* ---------------------------------------------------------------------------
-   Modales
-   --------------------------------------------------------------------------- */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.45);
-  z-index: 1000;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity var(--transition);
+/* Shopping list rows — toggle check-off on click (only in category tables) */
+.courses-category .courses-table tbody tr {
+  cursor: pointer;
+  transition: opacity 0.25s var(--ease), background 0.15s;
 }
 
-.modal-overlay.modal-visible { opacity: 1; }
+.courses-category .courses-table tbody tr:nth-child(even) td { background: var(--color-surface-warm); }
+.courses-category .courses-table tbody tr:hover td { background: var(--color-accent); }
 
-.modal {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  max-width: 520px;
-  width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: var(--space-lg);
-  transform: translateY(-10px);
-  transition: transform var(--transition);
+/* Animated check circle */
+.courses-category .courses-table tbody td:first-child::before {
+  content: "○ ";
+  color: var(--color-primary-light);
+  font-size: .85rem;
+  display: inline;
+  transition: color 0.2s, content 0.2s;
 }
 
-.modal-overlay.modal-visible .modal { transform: translateY(0); }
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-lg);
-}
-
-.modal-header h2 {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--color-primary-dark);
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 1.4rem;
-  color: var(--color-text-muted);
-  line-height: 1;
-  padding: 2px 6px;
-}
-
-.modal-close:hover { color: var(--color-danger); }
-
-/* Modale large pour détail recette */
-.modal-lg { max-width: 720px; }
-
-.modal-section-title {
-  font-size: .9rem;
-  font-weight: 700;
+.courses-category .courses-table tbody tr.item-checked td { opacity: 0.36; }
+.courses-category .courses-table tbody tr.item-checked td:first-child { text-decoration: line-through; }
+.courses-category .courses-table tbody tr.item-checked td:first-child::before {
+  content: "✓ ";
   color: var(--color-primary);
-  border-bottom: 2px solid var(--color-accent);
-  padding-bottom: var(--space-xs);
-  margin: var(--space-lg) 0 var(--space-md);
-  text-transform: uppercase;
-  letter-spacing: .5px;
 }
 
-.detail-meta {
-  color: var(--color-text-muted);
-  font-size: .9rem;
-  margin-bottom: var(--space-sm);
-}
-
-.detail-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: .88rem;
-  margin-bottom: var(--space-md);
-}
-
-.detail-table th {
-  background: var(--color-accent);
-  color: var(--color-primary-dark);
-  padding: 6px 10px;
-  text-align: left;
-  font-weight: 600;
-}
-
-.detail-table th.text-center { text-align: center; }
-.detail-table td { padding: 6px 10px; border-bottom: 1px solid var(--color-border); }
-.detail-table td.text-center { text-align: center; }
-
-.ri-form {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr auto;
-  gap: var(--space-sm);
-  align-items: end;
-}
-
-.ri-form .form-group { margin-bottom: 0; }
-
-/* Ligne ingrédient dynamique dans le formulaire de création */
-.ri-row {
-  display: grid;
-  grid-template-columns: 1fr 80px 65px 30px;
-  gap: 6px;
-  align-items: center;
-  margin-bottom: 6px;
-}
-
-.ri-row select,
-.ri-row input[type="number"],
-.ri-row input[type="text"] {
-  min-width: 0;
-  width: 100%;
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: .85rem;
-  padding: 6px 8px;
-  background: var(--color-bg);
-  color: var(--color-text);
-  outline: none;
-  font-family: inherit;
-}
-
-.ri-row select:focus,
-.ri-row input:focus {
-  border-color: var(--color-primary-light);
-  background: white;
-}
-
-/* Inputs inline pour l'édition dans la vue détail */
-.inline-input {
-  border: 1.5px solid var(--color-primary-light);
-  border-radius: var(--radius-sm);
-  font-size: .85rem;
-  padding: 3px 6px;
-  background: white;
-  color: var(--color-text);
-  outline: none;
-  font-family: inherit;
-}
-
-.inline-input:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px var(--color-accent);
-}
+.courses-cout { font-weight: 600; color: var(--color-primary-dark); }
+.text-center { text-align: center; }
 
 /* ---------------------------------------------------------------------------
    Recherche & filtres tags (onglet recettes)
@@ -710,40 +773,39 @@ input, select, textarea { font-family: inherit; }
   min-width: 180px;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm);
+  font-family: var(--font-body);
   font-size: .95rem;
-  padding: 8px 12px;
+  padding: 9px 14px;
   outline: none;
-  background: var(--color-bg);
+  background: var(--color-surface-warm);
   color: var(--color-text);
-  font-family: inherit;
-  transition: border-color var(--transition);
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
 }
 
 .search-input:focus {
-  border-color: var(--color-primary-light);
+  border-color: var(--color-primary);
   background: white;
+  box-shadow: 0 0 0 3px rgba(124,154,126,.14);
 }
 
-.tag-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-xs);
-}
+.tag-filters { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
 
 .tag-filter-btn {
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
   border-radius: 999px;
   color: var(--color-text-muted);
-  font-size: .78rem;
+  font-family: var(--font-body);
+  font-size: .75rem;
   font-weight: 600;
-  padding: 3px 12px;
+  padding: 4px 14px;
   cursor: pointer;
   transition: all var(--transition);
+  letter-spacing: .3px;
 }
 
 .tag-filter-btn:hover {
-  border-color: var(--color-primary-light);
+  border-color: var(--color-primary);
   color: var(--color-primary);
 }
 
@@ -751,28 +813,172 @@ input, select, textarea { font-family: inherit; }
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: white;
+  box-shadow: 0 2px 8px rgba(124,154,126,.3);
 }
 
-/* Tags sur les cartes recette */
-.rec-tags {
+/* ---------------------------------------------------------------------------
+   Modales
+   --------------------------------------------------------------------------- */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(44,44,44,.42);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.modal-overlay.modal-visible { opacity: 1; }
+
+.modal {
+  background: var(--color-surface-warm);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--color-border-light);
+  max-width: 520px;
+  width: 92%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: var(--space-lg) var(--space-xl);
+  transform: translateY(-14px) scale(.97);
+  transition: transform var(--transition-slow);
+}
+
+.modal-overlay.modal-visible .modal { transform: translateY(0) scale(1); }
+
+.modal-header {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: var(--space-sm);
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border-light);
 }
 
-.rec-tag {
+.modal-header h2 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  letter-spacing: -0.3px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.35rem;
+  color: var(--color-text-light);
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition), color var(--transition);
+}
+
+.modal-close:hover { background: var(--color-danger-light); color: var(--color-danger); }
+
+.modal-lg { max-width: 740px; }
+
+.modal-section-title {
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  border-bottom: 2px solid var(--color-accent);
+  padding-bottom: var(--space-xs);
+  margin: var(--space-lg) 0 var(--space-md);
+  text-transform: uppercase;
+  letter-spacing: .9px;
+}
+
+.detail-meta {
+  color: var(--color-text-muted);
+  font-size: .88rem;
+  margin-top: 2px;
+}
+
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .88rem;
+  margin-bottom: var(--space-md);
+}
+
+.detail-table th {
   background: var(--color-accent);
   color: var(--color-primary-dark);
-  border-radius: 999px;
-  font-size: .72rem;
+  padding: 7px 12px;
+  text-align: left;
   font-weight: 600;
-  padding: 2px 8px;
+  font-size: .72rem;
+  letter-spacing: .5px;
+  text-transform: uppercase;
 }
 
-/* Comparatif magasins (courses) */
-.magasin-comparatif {
-  margin-bottom: var(--space-lg);
+.detail-table th.text-center { text-align: center; }
+.detail-table td { padding: 7px 12px; border-bottom: 1px solid var(--color-border-light); }
+.detail-table td.text-center { text-align: center; }
+.detail-table tr:last-child td { border-bottom: none; }
+
+.ri-form {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: var(--space-sm);
+  align-items: end;
+}
+
+.ri-form .form-group { margin-bottom: 0; }
+
+/* Dynamic ingredient rows (recipe creation form) */
+.ri-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 65px 30px;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.ri-row select,
+.ri-row input[type="number"],
+.ri-row input[type="text"] {
+  min-width: 0;
+  width: 100%;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: .85rem;
+  padding: 6px 8px;
+  background: var(--color-surface-warm);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.ri-row select:focus,
+.ri-row input:focus {
+  border-color: var(--color-primary);
+  background: white;
+}
+
+/* Inline edit inputs */
+.inline-input {
+  border: 1.5px solid var(--color-primary-light);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: .85rem;
+  padding: 4px 7px;
+  background: white;
+  color: var(--color-text);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.inline-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(124,154,126,.18);
 }
 
 /* ---------------------------------------------------------------------------
@@ -786,7 +992,7 @@ input, select, textarea { font-family: inherit; }
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  max-width: 360px;
+  max-width: 340px;
 }
 
 .toast {
@@ -795,36 +1001,32 @@ input, select, textarea { font-family: inherit; }
   border-radius: var(--radius-md);
   padding: var(--space-md) var(--space-lg);
   box-shadow: var(--shadow-lg);
-  font-size: .9rem;
+  font-family: var(--font-body);
+  font-size: .875rem;
   font-weight: 500;
   opacity: 0;
-  transform: translateX(30px);
-  transition: opacity .25s ease, transform .25s ease;
+  transform: translateX(20px);
+  transition: opacity .25s var(--ease), transform .25s var(--ease);
 }
 
 .toast-visible { opacity: 1; transform: translateX(0); }
-
-.toast-error { background: var(--color-danger); }
+.toast-error   { background: var(--color-danger); }
 .toast-success { background: var(--color-success); }
 
 /* ---------------------------------------------------------------------------
-   États vides / chargement / erreur
+   Empty / loading / error states
    --------------------------------------------------------------------------- */
 .empty-state {
   color: var(--color-text-muted);
-  font-size: .95rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
   text-align: center;
-  padding: var(--space-xl);
+  padding: var(--space-2xl) var(--space-xl);
   font-style: italic;
 }
 
-.loading-text {
-  color: var(--color-text-muted);
-  font-size: .88rem;
-  font-style: italic;
-}
-
-.error-text { color: var(--color-danger); font-size: .88rem; }
+.loading-text { color: var(--color-text-light); font-size: .88rem; font-style: italic; }
+.error-text   { color: var(--color-danger); font-size: .88rem; }
 
 .empty-cell {
   text-align: center;
@@ -837,12 +1039,14 @@ input, select, textarea { font-family: inherit; }
    Responsive
    --------------------------------------------------------------------------- */
 @media (max-width: 768px) {
-  .tab-content { padding: var(--space-md); }
-  .app-header { padding: var(--space-md); }
-  .tab-nav { padding: 0 var(--space-md); }
+  .tab-content  { padding: var(--space-md); }
+  .app-header   { padding: var(--space-md); }
+  .tab-nav      { padding: 0 var(--space-md); }
   .section-header { flex-direction: column; align-items: flex-start; gap: var(--space-sm); }
   .ingredient-grid { grid-template-columns: 1fr; }
   .cal-grid { grid-template-columns: 80px repeat(7, minmax(70px, 1fr)); }
   .ri-form { grid-template-columns: 1fr 1fr; }
   .courses-controls { flex-direction: column; align-items: flex-start; }
+  .section-search   { flex-direction: column; }
+  .search-input     { width: 100%; }
 }

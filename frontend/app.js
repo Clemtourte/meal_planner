@@ -96,6 +96,16 @@ document.addEventListener("click", (e) => {
 
 let currentTab = null;
 
+function _updateTabIndicator(tabName) {
+  requestAnimationFrame(() => {
+    const btn = document.querySelector(`[data-tab="${tabName}"]`);
+    const indicator = document.getElementById("tab-indicator");
+    if (!btn || !indicator) return;
+    indicator.style.left  = btn.offsetLeft + "px";
+    indicator.style.width = btn.offsetWidth + "px";
+  });
+}
+
 function switchTab(tabName) {
   if (currentTab === tabName) return;
   currentTab = tabName;
@@ -109,6 +119,7 @@ function switchTab(tabName) {
 
   document.getElementById(`tab-${tabName}`).classList.add("active");
   document.querySelector(`[data-tab="${tabName}"]`).classList.add("active");
+  _updateTabIndicator(tabName);
 
   switch (tabName) {
     case "ingredients":
@@ -135,4 +146,10 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => switchTab(btn.dataset.tab));
   });
   switchTab("ingredients");
+
+  // Shopping list check-off toggle (courses category rows only)
+  document.getElementById("courses-result").addEventListener("click", (e) => {
+    const row = e.target.closest(".courses-category tbody tr");
+    if (row) row.classList.toggle("item-checked");
+  });
 });
