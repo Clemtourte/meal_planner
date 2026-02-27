@@ -230,18 +230,33 @@ function _renderPrix(ingId, prix) {
 }
 
 function editPrix(ingId, prixId, magasin, prix, qtyRef, uniteRef) {
-  document.getElementById(`prix-mag-${prixId}`).innerHTML =
-    `<input type="text" value="${_esc(magasin)}" id="e-mag-${prixId}" class="inline-input" style="width:80px" />`;
-  document.getElementById(`prix-val-${prixId}`).innerHTML =
-    `<input type="number" value="${prix}" step="0.01" min="0" id="e-val-${prixId}" class="inline-input" style="width:60px" /> €`;
-  document.getElementById(`prix-qty-${prixId}`).innerHTML =
-    `<input type="number" value="${qtyRef}" step="0.001" min="0" id="e-qty-${prixId}" class="inline-input" style="width:55px" />
-     <input type="text" value="${_esc(uniteRef)}" id="e-unite-${prixId}" class="inline-input" style="width:42px" />`;
-  document.getElementById(`prix-pu-${prixId}`).innerHTML = "—";
-  document.getElementById(`prix-act-${prixId}`).innerHTML = `
-    <button class="btn btn-xs btn-primary" onclick="savePrix('${ingId}', '${prixId}')">Sauvegarder</button>
-    <button class="btn btn-xs btn-secondary" onclick="_loadAndRenderPrix('${ingId}')">Annuler</button>
-  `;
+  const panel = document.getElementById(`prix-panel-${ingId}`);
+  panel.innerHTML = `
+    <div class="prix-edit-form">
+      <p class="prix-edit-title">Modifier le prix — ${_esc(magasin)}</p>
+      <div class="prix-edit-fields">
+        <div class="form-group" style="margin:0">
+          <label>Magasin</label>
+          <input type="text" id="e-mag-${prixId}" value="${_esc(magasin)}" class="prix-edit-input" placeholder="Magasin" />
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Prix (€)</label>
+          <input type="number" id="e-val-${prixId}" value="${prix}" step="0.01" min="0" class="prix-edit-input" />
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Qté de référence</label>
+          <input type="number" id="e-qty-${prixId}" value="${qtyRef}" step="0.001" min="0" class="prix-edit-input" />
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Unité (ex : kg, L)</label>
+          <input type="text" id="e-unite-${prixId}" value="${_esc(uniteRef)}" class="prix-edit-input" placeholder="ex: kg" />
+        </div>
+      </div>
+      <div class="form-actions" style="margin-top:0">
+        <button class="btn btn-secondary btn-sm" onclick="_loadAndRenderPrix('${ingId}')">Annuler</button>
+        <button class="btn btn-primary btn-sm" onclick="savePrix('${ingId}', '${prixId}')">Sauvegarder</button>
+      </div>
+    </div>`;
 }
 
 async function savePrix(ingId, prixId) {

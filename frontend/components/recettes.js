@@ -199,22 +199,22 @@ function _addIngredientRow() {
   const row = document.createElement("div");
   row.className = "ri-row";
   row.innerHTML = `
-    <select class="ri-row-ingredient" onchange="_onIngSelectChange(this)">
+    <select class="ri-row-ingredient" onchange="_onIngRowChange(this)">
       ${_makeIngredientOptions()}
     </select>
     <input class="ri-row-quantite" type="number" step="0.001" min="0" placeholder="Qté" />
-    <input class="ri-row-unite" type="text" placeholder="Unité" />
+    <span class="ri-row-unite-lbl">—</span>
     <button type="button" class="btn btn-xs btn-danger" onclick="this.closest('.ri-row').remove()">×</button>
   `;
   container.appendChild(row);
 }
 
-function _onIngSelectChange(sel) {
+function _onIngRowChange(sel) {
   const row = sel.closest(".ri-row");
   const opt = sel.options[sel.selectedIndex];
-  const uniteDefaut = opt ? opt.dataset.unite || "" : "";
-  const uniteInput = row.querySelector(".ri-row-unite");
-  if (uniteInput && uniteDefaut) uniteInput.value = uniteDefaut;
+  const unite = opt ? opt.dataset.unite || "—" : "—";
+  const lbl = row.querySelector(".ri-row-unite-lbl");
+  if (lbl) lbl.textContent = unite;
 }
 
 // ---------------------------------------------------------------------------
@@ -247,9 +247,11 @@ async function submitRecetteForm(e) {
       // Étape 2 : ajouter les ingrédients un par un
       const rows = document.querySelectorAll("#rec-ing-rows .ri-row");
       for (const row of rows) {
-        const ingId = row.querySelector(".ri-row-ingredient").value;
+        const sel = row.querySelector(".ri-row-ingredient");
+        const ingId = sel.value;
+        const opt = sel.options[sel.selectedIndex];
+        const unite = opt ? opt.dataset.unite || "" : "";
         const quantite = parseFloat(row.querySelector(".ri-row-quantite").value);
-        const unite = row.querySelector(".ri-row-unite").value.trim();
         if (!ingId || !unite || isNaN(quantite) || quantite <= 0) continue;
         await apiPost(`/recettes/${recette.id}/ingredients`, {
           ingredient_id: ingId,
@@ -278,7 +280,12 @@ async function confirmDeleteRecette(id, nom) {
     _renderRecettes();
     _renderTagFilters();
   } catch (err) {
-    showToast("Erreur : " + err.message, "error");
+    const msg = err.message || "";
+    if (msg.includes("calendrier") || msg.includes("planifi")) {
+      showFKError(msg);
+    } else {
+      showToast("Erreur : " + msg, "error");
+    }
   }
 }
 
@@ -307,7 +314,7 @@ function _renderRecetteDetail() {
   const tbody = document.getElementById("detail-ingredients-body");
   if (rec.ingredients.length === 0) {
     tbody.innerHTML =
-      '<tr><td colspan="4" class="empty-cell">Aucun ingrédient. Ajoutez-en un ci-dessous.</td></tr>';
+      '<tr><td colspan="3" class="empty-cell">Aucun ingrédient. Ajoutez-en un ci-dessous.</td></tr>';
     return;
   }
   tbody.innerHTML = rec.ingredients
@@ -315,9 +322,8 @@ function _renderRecetteDetail() {
       (ri) => `
     <tr id="ri-row-${ri.id}">
       <td>${_escR(ri.ingredient_nom || "—")}</td>
-      <td class="text-center" id="ri-qty-${ri.id}">${ri.quantite}</td>
-      <td class="text-center" id="ri-unite-${ri.id}">${_escR(ri.unite)}</td>
-      <td class="text-center ri-actions">
+      <td class="text-center" id="ri-qty-${ri.id}">${ri.quantite} <span class="ri-unite-lbl">${_escR(ri.unite)}</span></td>
+      <td class="text-center ri-actions" id="ri-act-${ri.id}">
         <button class="btn btn-xs btn-outline" title="Modifier" onclick="editIngredientInDetail('${rec.id}', '${ri.id}', ${ri.quantite}, '${_escR(ri.unite)}')">✏️</button>
         <button class="btn btn-xs btn-danger" title="Supprimer" onclick="removeIngredientFromRecette('${rec.id}', '${ri.id}')">✕</button>
       </td>
@@ -332,24 +338,18 @@ function _renderRecetteDetail() {
 
 function editIngredientInDetail(recetteId, riId, currentQty, currentUnite) {
   document.getElementById(`ri-qty-${riId}`).innerHTML =
-    `<input type="number" step="0.001" min="0" value="${currentQty}" id="edit-qty-${riId}" class="inline-input inline-input--cell" />`;
-  document.getElementById(`ri-unite-${riId}`).innerHTML =
-    `<input type="text" value="${currentUnite}" id="edit-unite-${riId}" class="inline-input inline-input--cell" />`;
+    `<input type="number" step="0.001" min="0" value="${currentQty}" id="edit-qty-${riId}" class="inline-input inline-input--cell" /> <span class="ri-unite-lbl">${_escR(currentUnite)}</span>`;
 
-  const row = document.getElementById(`ri-row-${riId}`);
-  row.querySelector("td:last-child").innerHTML = `
-    <div class="ri-actions">
-      <button class="btn btn-xs btn-primary" title="Valider" onclick="saveIngredientInDetail('${recetteId}', '${riId}')">✓</button>
-      <button class="btn btn-xs btn-secondary" title="Annuler" onclick="cancelIngredientEdit('${recetteId}', '${riId}', ${currentQty}, '${_escR(currentUnite)}')">✗</button>
-    </div>
+  document.getElementById(`ri-act-${riId}`).innerHTML = `
+    <button class="btn btn-xs btn-primary" title="Valider" onclick="saveIngredientInDetail('${recetteId}', '${riId}', '${_escR(currentUnite)}')">✓</button>
+    <button class="btn btn-xs btn-secondary" title="Annuler" onclick="cancelIngredientEdit('${recetteId}', '${riId}', ${currentQty}, '${_escR(currentUnite)}')">✗</button>
   `;
 }
 
-async function saveIngredientInDetail(recetteId, riId) {
+async function saveIngredientInDetail(recetteId, riId, unite) {
   const quantite = parseFloat(document.getElementById(`edit-qty-${riId}`).value);
-  const unite = document.getElementById(`edit-unite-${riId}`).value.trim();
-  if (isNaN(quantite) || quantite <= 0 || !unite) {
-    showToast("Quantité et unité invalides", "error");
+  if (isNaN(quantite) || quantite <= 0) {
+    showToast("Quantité invalide", "error");
     return;
   }
   try {
@@ -363,14 +363,11 @@ async function saveIngredientInDetail(recetteId, riId) {
 }
 
 function cancelIngredientEdit(recetteId, riId, originalQty, originalUnite) {
-  document.getElementById(`ri-qty-${riId}`).innerHTML = originalQty;
-  document.getElementById(`ri-unite-${riId}`).innerHTML = _escR(originalUnite);
-  const row = document.getElementById(`ri-row-${riId}`);
-  row.querySelector("td:last-child").innerHTML = `
-    <div class="ri-actions">
-      <button class="btn btn-xs btn-outline" title="Modifier" onclick="editIngredientInDetail('${recetteId}', '${riId}', ${originalQty}, '${_escR(originalUnite)}')">✏️</button>
-      <button class="btn btn-xs btn-danger" title="Supprimer" onclick="removeIngredientFromRecette('${recetteId}', '${riId}')">✕</button>
-    </div>
+  document.getElementById(`ri-qty-${riId}`).innerHTML =
+    `${originalQty} <span class="ri-unite-lbl">${_escR(originalUnite)}</span>`;
+  document.getElementById(`ri-act-${riId}`).innerHTML = `
+    <button class="btn btn-xs btn-outline" title="Modifier" onclick="editIngredientInDetail('${recetteId}', '${riId}', ${originalQty}, '${_escR(originalUnite)}')">✏️</button>
+    <button class="btn btn-xs btn-danger" title="Supprimer" onclick="removeIngredientFromRecette('${recetteId}', '${riId}')">✕</button>
   `;
 }
 
@@ -388,11 +385,6 @@ function _populateIngredientSelect() {
           `<option value="${i.id}" data-unite="${_escR(i.unite_defaut)}">${_escR(i.nom)} (${_escR(i.unite_defaut)})</option>`
       )
       .join("");
-  sel.onchange = function () {
-    const opt = this.options[this.selectedIndex];
-    const unite = opt ? opt.dataset.unite || "" : "";
-    if (unite) document.getElementById("ri-unite").value = unite;
-  };
 }
 
 async function submitAddIngredientToRecette(e) {
@@ -403,10 +395,13 @@ async function submitAddIngredientToRecette(e) {
     showToast("Veuillez sélectionner un ingrédient", "error");
     return;
   }
+  const sel = document.getElementById("ri-ingredient");
+  const opt = sel.options[sel.selectedIndex];
+  const unite = opt ? opt.dataset.unite || "" : "";
   const data = {
     ingredient_id: ingId,
     quantite: parseFloat(form["ri-quantite"].value),
-    unite: form["ri-unite"].value.trim(),
+    unite,
   };
   try {
     await apiPost(`/recettes/${_currentRecetteDetail.id}/ingredients`, data);

@@ -175,7 +175,7 @@ async function validateCourses() {
   const magasins = Object.entries(data.cout_par_magasin || {});
   const magasinChoisi =
     magasins.length > 0
-      ? magasins.sort(([, a], [, b]) => b - a)[0][0]
+      ? magasins.sort(([, a], [, b]) => a - b)[0][0] // magasin le moins cher
       : null;
 
   try {

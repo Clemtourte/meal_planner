@@ -1027,14 +1027,13 @@ input, select, textarea { font-family: inherit; }
 .detail-table tr:last-child td { border-bottom: none; }
 
 /* Column widths: name 40%, qty 18%, unit 18%, action 24% */
-.detail-table th:nth-child(1), .detail-table td:nth-child(1) { width: 40%; }
-.detail-table th:nth-child(2), .detail-table td:nth-child(2) { width: 18%; }
-.detail-table th:nth-child(3), .detail-table td:nth-child(3) { width: 18%; }
-.detail-table th:nth-child(4), .detail-table td:nth-child(4) { width: 24%; }
+.detail-table th:nth-child(1), .detail-table td:nth-child(1) { width: 52%; }
+.detail-table th:nth-child(2), .detail-table td:nth-child(2) { width: 28%; }
+.detail-table th:nth-child(3), .detail-table td:nth-child(3) { width: 20%; }
 
 .ri-form {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr auto;
+  grid-template-columns: 2fr 1fr auto;
   gap: var(--space-sm);
   align-items: end;
 }
@@ -1067,7 +1066,22 @@ input, select, textarea { font-family: inherit; }
 
 .ri-row select { flex: 1 1 120px; }
 .ri-row input[type="number"] { flex: 0 0 80px; }
-.ri-row input[type="text"] { flex: 0 0 65px; }
+
+/* Unit label in ingredient rows */
+.ri-row-unite-lbl {
+  font-size: var(--text-sm);
+  color: var(--color-primary-dark);
+  font-weight: 600;
+  min-width: 28px;
+  text-align: left;
+}
+
+/* Unit label in detail table cells */
+.ri-unite-lbl {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  margin-left: 2px;
+}
 
 .ri-row .btn-danger {
   flex: 0 0 auto;
@@ -1104,11 +1118,38 @@ input, select, textarea { font-family: inherit; }
 
 /* FIX 4 — cell-scoped inline input */
 .inline-input--cell {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
+  width: 70%;
+  max-width: 90px;
+  min-width: 40px;
   box-sizing: border-box;
 }
+
+/* Prix panel edit form */
+.prix-edit-form {
+  background: var(--color-surface-warm);
+  border: 1.5px solid var(--color-primary-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  margin-top: var(--space-sm);
+}
+
+.prix-edit-title {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: var(--space-sm);
+}
+
+.prix-edit-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.prix-edit-input { width: 100%; }
 
 /* FIX 4 — compact action buttons in detail table */
 .ri-actions {
