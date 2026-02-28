@@ -490,9 +490,11 @@ function _renderRecetteDetail() {
     <tr id="ri-row-${ri.id}">
       <td>${_escR(ri.ingredient_nom || "—")}</td>
       <td class="text-center" id="ri-qty-${ri.id}">${ri.quantite} <span class="ri-unite-lbl">${_escR(ri.unite)}</span></td>
-      <td class="text-center ri-actions" id="ri-act-${ri.id}">
-        <button class="btn btn-xs btn-outline" title="Modifier" onclick="editIngredientInDetail('${rec.id}', '${ri.id}', ${ri.quantite}, '${_escR(ri.unite)}')">✏️</button>
-        <button class="btn btn-xs btn-danger" title="Supprimer" onclick="removeIngredientFromRecette('${rec.id}', '${ri.id}')">✕</button>
+      <td class="text-center" id="ri-act-${ri.id}">
+        <div class="ri-actions">
+          <button class="btn btn-xs btn-outline" title="Modifier" onclick="editIngredientInDetail('${rec.id}', '${ri.id}', ${ri.quantite}, '${_escR(ri.unite)}')">✏️</button>
+          <button class="btn btn-xs btn-danger" title="Supprimer" onclick="removeIngredientFromRecette('${rec.id}', '${ri.id}')">✕</button>
+        </div>
       </td>
     </tr>`
     )
@@ -509,8 +511,10 @@ function editIngredientInDetail(recetteId, riId, currentQty, currentUnite) {
     ` <input type="text" value="${_escR(currentUnite)}" id="edit-unite-${riId}" class="inline-input inline-input--cell" style="width:48px" placeholder="unité" />`;
 
   document.getElementById(`ri-act-${riId}`).innerHTML = `
-    <button class="btn btn-xs btn-primary" title="Valider" onclick="saveIngredientInDetail('${recetteId}', '${riId}')">✓</button>
-    <button class="btn btn-xs btn-secondary" title="Annuler" onclick="cancelIngredientEdit('${recetteId}', '${riId}', ${currentQty}, '${_escR(currentUnite)}')">✗</button>
+    <div class="ri-actions">
+      <button class="btn btn-xs btn-primary" title="Valider" onclick="saveIngredientInDetail('${recetteId}', '${riId}')">✓</button>
+      <button class="btn btn-xs btn-secondary" title="Annuler" onclick="cancelIngredientEdit('${recetteId}', '${riId}', ${currentQty}, '${_escR(currentUnite)}')">✗</button>
+    </div>
   `;
 }
 
@@ -539,8 +543,10 @@ function cancelIngredientEdit(recetteId, riId, originalQty, originalUnite) {
   document.getElementById(`ri-qty-${riId}`).innerHTML =
     `${originalQty} <span class="ri-unite-lbl">${_escR(originalUnite)}</span>`;
   document.getElementById(`ri-act-${riId}`).innerHTML = `
-    <button class="btn btn-xs btn-outline" title="Modifier" onclick="editIngredientInDetail('${recetteId}', '${riId}', ${originalQty}, '${_escR(originalUnite)}')">✏️</button>
-    <button class="btn btn-xs btn-danger" title="Supprimer" onclick="removeIngredientFromRecette('${recetteId}', '${riId}')">✕</button>
+    <div class="ri-actions">
+      <button class="btn btn-xs btn-outline" title="Modifier" onclick="editIngredientInDetail('${recetteId}', '${riId}', ${originalQty}, '${_escR(originalUnite)}')">✏️</button>
+      <button class="btn btn-xs btn-danger" title="Supprimer" onclick="removeIngredientFromRecette('${recetteId}', '${riId}')">✕</button>
+    </div>
   `;
 }
 

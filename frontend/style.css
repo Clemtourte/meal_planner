@@ -1167,11 +1167,13 @@ input, select, textarea { font-family: inherit; }
 
 .prix-edit-input { width: 100%; }
 
-/* FIX 4 — compact action buttons in detail table */
+/* action buttons in detail table — div wrapper inside td */
 .ri-actions {
   display: flex;
+  width: 100%;
   gap: var(--space-xs);
   justify-content: center;
+  align-items: center;
   flex-wrap: wrap;
 }
 
