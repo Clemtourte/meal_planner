@@ -9,6 +9,54 @@ let _currentRecetteDetail = null;
 let _searchQuery = "";
 let _activeTag = null;
 
+// Cache des prix par ingredient_id → array de prix
+const _priceCache = new Map();
+
+// ---------------------------------------------------------------------------
+// Conversion d'unités (miroir de la logique backend _to_base)
+// ---------------------------------------------------------------------------
+
+const _UNIT_TO_BASE_JS = {
+  kg: ["g", 1000], Kg: ["g", 1000], KG: ["g", 1000],
+  kilo: ["g", 1000], kilos: ["g", 1000],
+  l: ["ml", 1000], L: ["ml", 1000],
+  litre: ["ml", 1000], litres: ["ml", 1000],
+  liter: ["ml", 1000], liters: ["ml", 1000],
+  cl: ["ml", 10], CL: ["ml", 10],
+  dl: ["ml", 100], DL: ["ml", 100],
+};
+
+function _unitToBase(qty, unit) {
+  const conv = _UNIT_TO_BASE_JS[unit];
+  if (conv) return [qty * conv[1], conv[0]];
+  return [qty, unit];
+}
+
+/**
+ * Calcule le coût estimé d'une quantité d'ingrédient à partir de la liste de prix.
+ * Retourne { cout, magasin } ou null si aucun prix compatible.
+ */
+function _estimateCostFromPrices(prices, qty, unit) {
+  if (!prices || prices.length === 0 || !qty || qty <= 0 || !unit) return null;
+  const [normQty, normUnit] = _unitToBase(qty, unit);
+  let best = null;
+  let bestCostPerUnit = Infinity;
+  for (const p of prices) {
+    const [refQtyBase, refUnitBase] = _unitToBase(
+      parseFloat(p.quantite_reference),
+      p.unite_reference
+    );
+    if (refUnitBase !== normUnit) continue;
+    const costPerUnit = parseFloat(p.prix) / refQtyBase;
+    if (costPerUnit < bestCostPerUnit) {
+      bestCostPerUnit = costPerUnit;
+      best = { magasin: p.magasin, costPerUnit };
+    }
+  }
+  if (!best) return null;
+  return { cout: best.costPerUnit * normQty, magasin: best.magasin };
+}
+
 async function initRecettes() {
   await Promise.all([_loadRecettes(), _loadAllIngredients()]);
   _renderRecettes();
@@ -150,6 +198,16 @@ function _bindRecetteEvents() {
       _renderRecettes();
     };
   }
+
+  // Mise à jour de l'unité et de l'estimation de coût dans la modale détail
+  const riIngredient = document.getElementById("ri-ingredient");
+  if (riIngredient) riIngredient.onchange = () => _onDetailIngRowChange();
+
+  const riQuantite = document.getElementById("ri-quantite");
+  if (riQuantite) riQuantite.oninput = () => _updateDetailCostHint();
+
+  const riUnite = document.getElementById("ri-unite");
+  if (riUnite) riUnite.oninput = () => _updateDetailCostHint();
 }
 
 // ---------------------------------------------------------------------------
@@ -202,19 +260,119 @@ function _addIngredientRow() {
     <select class="ri-row-ingredient" onchange="_onIngRowChange(this)">
       ${_makeIngredientOptions()}
     </select>
-    <input class="ri-row-quantite" type="number" step="0.001" min="0" placeholder="Qté" />
-    <span class="ri-row-unite-lbl">—</span>
+    <input class="ri-row-quantite" type="number" step="0.001" min="0" placeholder="Qté"
+           oninput="_onIngRowQtyChange(this)" />
+    <input class="ri-row-unite" type="text" placeholder="unité"
+           oninput="_onIngRowQtyChange(this)" />
     <button type="button" class="btn btn-xs btn-danger" onclick="this.closest('.ri-row').remove()">×</button>
+    <span class="ri-cost-hint"></span>
   `;
   container.appendChild(row);
 }
 
-function _onIngRowChange(sel) {
+async function _onIngRowChange(sel) {
   const row = sel.closest(".ri-row");
   const opt = sel.options[sel.selectedIndex];
-  const unite = opt ? opt.dataset.unite || "—" : "—";
-  const lbl = row.querySelector(".ri-row-unite-lbl");
-  if (lbl) lbl.textContent = unite;
+  const unite = opt ? opt.dataset.unite || "" : "";
+  const uniteInput = row.querySelector(".ri-row-unite");
+  if (uniteInput) uniteInput.value = unite;
+
+  const ingId = sel.value;
+  if (ingId) {
+    if (!_priceCache.has(ingId)) {
+      try {
+        const prices = await apiGet(`/ingredients/${ingId}/prix`);
+        _priceCache.set(ingId, prices);
+      } catch {
+        _priceCache.set(ingId, []);
+      }
+    }
+    _updateRowCostHint(row, ingId);
+  } else {
+    const hint = row.querySelector(".ri-cost-hint");
+    if (hint) { hint.textContent = ""; hint.className = "ri-cost-hint"; }
+  }
+}
+
+function _onIngRowQtyChange(input) {
+  const row = input.closest(".ri-row");
+  const sel = row.querySelector(".ri-row-ingredient");
+  const ingId = sel?.value;
+  if (ingId) _updateRowCostHint(row, ingId);
+}
+
+function _updateRowCostHint(row, ingId) {
+  const hint = row.querySelector(".ri-cost-hint");
+  if (!hint) return;
+  const qty = parseFloat(row.querySelector(".ri-row-quantite").value);
+  const unit = row.querySelector(".ri-row-unite").value.trim();
+  if (!unit || isNaN(qty) || qty <= 0) {
+    hint.textContent = "";
+    hint.className = "ri-cost-hint";
+    return;
+  }
+  const prices = _priceCache.get(ingId) || [];
+  const est = _estimateCostFromPrices(prices, qty, unit);
+  if (est) {
+    hint.textContent = `≈ ${est.cout.toFixed(2)} € (${est.magasin})`;
+    hint.className = "ri-cost-hint has-cost";
+  } else {
+    hint.textContent = "";
+    hint.className = "ri-cost-hint";
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Estimation de coût dans la modale détail (formulaire ajout ingrédient)
+// ---------------------------------------------------------------------------
+
+async function _onDetailIngRowChange() {
+  const sel = document.getElementById("ri-ingredient");
+  if (!sel) return;
+  const opt = sel.options[sel.selectedIndex];
+  const unite = opt ? opt.dataset.unite || "" : "";
+  const uniteInput = document.getElementById("ri-unite");
+  if (uniteInput) uniteInput.value = unite;
+
+  const ingId = sel.value;
+  if (ingId) {
+    if (!_priceCache.has(ingId)) {
+      try {
+        const prices = await apiGet(`/ingredients/${ingId}/prix`);
+        _priceCache.set(ingId, prices);
+      } catch {
+        _priceCache.set(ingId, []);
+      }
+    }
+    _updateDetailCostHint();
+  } else {
+    const hint = document.getElementById("ri-cost-hint-detail");
+    if (hint) { hint.textContent = ""; hint.className = "ri-cost-hint"; }
+  }
+}
+
+function _updateDetailCostHint() {
+  const hint = document.getElementById("ri-cost-hint-detail");
+  if (!hint) return;
+  const sel = document.getElementById("ri-ingredient");
+  const ingId = sel?.value;
+  if (!ingId) { hint.textContent = ""; hint.className = "ri-cost-hint"; return; }
+  const qty = parseFloat(document.getElementById("ri-quantite")?.value);
+  const unit = document.getElementById("ri-unite")?.value.trim();
+  if (!unit || isNaN(qty) || qty <= 0) {
+    hint.textContent = "";
+    hint.className = "ri-cost-hint";
+    return;
+  }
+  const prices = _priceCache.get(ingId) || [];
+  const est = _estimateCostFromPrices(prices, qty, unit);
+  if (est) {
+    hint.textContent = `≈ ${est.cout.toFixed(2)} € (basé sur le prix ${est.magasin})`;
+    hint.className = "ri-cost-hint has-cost";
+  } else {
+    hint.textContent = "";
+    hint.className = "ri-cost-hint";
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -250,7 +408,13 @@ async function submitRecetteForm(e) {
         const sel = row.querySelector(".ri-row-ingredient");
         const ingId = sel.value;
         const opt = sel.options[sel.selectedIndex];
-        const unite = opt ? opt.dataset.unite || "" : "";
+        // Lire l'unité depuis l'input (éditable) ou le data-unite par défaut
+        const uniteInput = row.querySelector(".ri-row-unite");
+        const unite = uniteInput
+          ? uniteInput.value.trim()
+          : opt
+          ? opt.dataset.unite || ""
+          : "";
         const quantite = parseFloat(row.querySelector(".ri-row-quantite").value);
         if (!ingId || !unite || isNaN(quantite) || quantite <= 0) continue;
         await apiPost(`/recettes/${recette.id}/ingredients`, {
@@ -298,6 +462,9 @@ async function openRecetteDetail(id) {
     _currentRecetteDetail = await apiGet(`/recettes/${id}`);
     _renderRecetteDetail();
     _populateIngredientSelect();
+    // Réinitialiser l'hint de coût
+    const hint = document.getElementById("ri-cost-hint-detail");
+    if (hint) { hint.textContent = ""; hint.className = "ri-cost-hint"; }
     showModal("modal-recette-detail");
   } catch (err) {
     showToast("Erreur : " + err.message, "error");
@@ -338,18 +505,24 @@ function _renderRecetteDetail() {
 
 function editIngredientInDetail(recetteId, riId, currentQty, currentUnite) {
   document.getElementById(`ri-qty-${riId}`).innerHTML =
-    `<input type="number" step="0.001" min="0" value="${currentQty}" id="edit-qty-${riId}" class="inline-input inline-input--cell" /> <span class="ri-unite-lbl">${_escR(currentUnite)}</span>`;
+    `<input type="number" step="0.001" min="0" value="${currentQty}" id="edit-qty-${riId}" class="inline-input inline-input--cell" style="width:60px" />` +
+    ` <input type="text" value="${_escR(currentUnite)}" id="edit-unite-${riId}" class="inline-input inline-input--cell" style="width:48px" placeholder="unité" />`;
 
   document.getElementById(`ri-act-${riId}`).innerHTML = `
-    <button class="btn btn-xs btn-primary" title="Valider" onclick="saveIngredientInDetail('${recetteId}', '${riId}', '${_escR(currentUnite)}')">✓</button>
+    <button class="btn btn-xs btn-primary" title="Valider" onclick="saveIngredientInDetail('${recetteId}', '${riId}')">✓</button>
     <button class="btn btn-xs btn-secondary" title="Annuler" onclick="cancelIngredientEdit('${recetteId}', '${riId}', ${currentQty}, '${_escR(currentUnite)}')">✗</button>
   `;
 }
 
-async function saveIngredientInDetail(recetteId, riId, unite) {
+async function saveIngredientInDetail(recetteId, riId) {
   const quantite = parseFloat(document.getElementById(`edit-qty-${riId}`).value);
+  const unite = document.getElementById(`edit-unite-${riId}`).value.trim();
   if (isNaN(quantite) || quantite <= 0) {
     showToast("Quantité invalide", "error");
+    return;
+  }
+  if (!unite) {
+    showToast("Unité invalide", "error");
     return;
   }
   try {
@@ -385,6 +558,9 @@ function _populateIngredientSelect() {
           `<option value="${i.id}" data-unite="${_escR(i.unite_defaut)}">${_escR(i.nom)} (${_escR(i.unite_defaut)})</option>`
       )
       .join("");
+  // Réinitialiser l'unité et le hint
+  const uniteInput = document.getElementById("ri-unite");
+  if (uniteInput) uniteInput.value = "";
 }
 
 async function submitAddIngredientToRecette(e) {
@@ -395,9 +571,18 @@ async function submitAddIngredientToRecette(e) {
     showToast("Veuillez sélectionner un ingrédient", "error");
     return;
   }
-  const sel = document.getElementById("ri-ingredient");
-  const opt = sel.options[sel.selectedIndex];
-  const unite = opt ? opt.dataset.unite || "" : "";
+  const uniteInput = document.getElementById("ri-unite");
+  const unite = uniteInput
+    ? uniteInput.value.trim()
+    : (() => {
+        const sel = document.getElementById("ri-ingredient");
+        const opt = sel?.options[sel.selectedIndex];
+        return opt ? opt.dataset.unite || "" : "";
+      })();
+  if (!unite) {
+    showToast("Veuillez saisir une unité", "error");
+    return;
+  }
   const data = {
     ingredient_id: ingId,
     quantite: parseFloat(form["ri-quantite"].value),
@@ -407,6 +592,9 @@ async function submitAddIngredientToRecette(e) {
     await apiPost(`/recettes/${_currentRecetteDetail.id}/ingredients`, data);
     showToast("Ingrédient ajouté ✓");
     form.reset();
+    if (uniteInput) uniteInput.value = "";
+    const hint = document.getElementById("ri-cost-hint-detail");
+    if (hint) { hint.textContent = ""; hint.className = "ri-cost-hint"; }
     _currentRecetteDetail = await apiGet(`/recettes/${_currentRecetteDetail.id}`);
     _renderRecetteDetail();
     _populateIngredientSelect();

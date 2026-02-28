@@ -1033,7 +1033,7 @@ input, select, textarea { font-family: inherit; }
 
 .ri-form {
   display: grid;
-  grid-template-columns: 2fr 1fr auto;
+  grid-template-columns: 2fr 1fr 70px auto;
   gap: var(--space-sm);
   align-items: end;
 }
@@ -1066,14 +1066,30 @@ input, select, textarea { font-family: inherit; }
 
 .ri-row select { flex: 1 1 120px; }
 .ri-row input[type="number"] { flex: 0 0 80px; }
+.ri-row input[type="text"] { flex: 0 0 60px; }
 
-/* Unit label in ingredient rows */
+/* Unit label in detail table cells */
 .ri-row-unite-lbl {
   font-size: var(--text-sm);
   color: var(--color-primary-dark);
   font-weight: 600;
   min-width: 28px;
   text-align: left;
+}
+
+/* Estimated cost hint below ingredient row */
+.ri-cost-hint {
+  flex-basis: 100%;
+  font-size: 0.73rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin: 0;
+  min-height: 1em;
+}
+.ri-cost-hint.has-cost {
+  color: var(--color-terracotta);
+  font-style: normal;
+  font-weight: 500;
 }
 
 /* Unit label in detail table cells */
@@ -1439,7 +1455,7 @@ input, select, textarea { font-family: inherit; }
   .section-header { flex-direction: column; align-items: flex-start; gap: var(--space-sm); }
   .ingredient-grid { grid-template-columns: 1fr; }
   .cal-grid { grid-template-columns: 70px repeat(7, minmax(65px, 1fr)); }
-  .ri-form { grid-template-columns: 1fr 1fr; }
+  .ri-form { grid-template-columns: 1fr 1fr 60px; }
   .courses-controls { flex-direction: column; align-items: flex-start; }
   .section-search   { flex-direction: column; }
   .search-input     { width: 100%; }

@@ -295,10 +295,15 @@
           <label for="ri-quantite">Quantité *</label>
           <input id="ri-quantite" name="ri-quantite" type="number" step="0.001" min="0" placeholder="ex : 200" required />
         </div>
+        <div class="form-group">
+          <label for="ri-unite">Unité *</label>
+          <input id="ri-unite" name="ri-unite" type="text" placeholder="g, kg…" required />
+        </div>
         <div class="form-group" style="align-self:flex-end">
           <button type="submit" class="btn btn-primary">+ Ajouter</button>
         </div>
       </form>
+      <p id="ri-cost-hint-detail" class="ri-cost-hint" style="margin-top:4px;padding:0 2px"></p>
     </div>
   </div>
 
