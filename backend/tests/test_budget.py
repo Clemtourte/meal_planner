@@ -36,6 +36,15 @@ def _mock_budget_insert(data: list) -> MagicMock:
     return mock
 
 
+def _mock_budget_upsert(data: list) -> MagicMock:
+    """Mock pour table().upsert().execute()."""
+    mock = MagicMock()
+    result = MagicMock()
+    result.data = data
+    mock.table.return_value.upsert.return_value.execute.return_value = result
+    return mock
+
+
 def _mock_budget_select(data: list) -> MagicMock:
     """Mock pour table().select().eq().order().execute()."""
     mock = MagicMock()
@@ -111,8 +120,8 @@ def test_get_budget_actuel(client: TestClient) -> None:
 
 
 def test_add_historique(client: TestClient) -> None:
-    """POST /api/budgets/historique → 201 avec la dépense enregistrée."""
-    app.dependency_overrides[get_supabase] = lambda: _mock_budget_insert(
+    """POST /api/budgets/historique → 201, upsert par semaine."""
+    app.dependency_overrides[get_supabase] = lambda: _mock_budget_upsert(
         [_HISTORIQUE_ROW]
     )
     try:

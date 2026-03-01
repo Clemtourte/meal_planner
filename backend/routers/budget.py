@@ -124,14 +124,20 @@ async def add_historique(
     db: Client = Depends(get_supabase),
     user_id: str = Depends(get_user_id),
 ) -> dict:
-    """Enregistre la dépense estimée d'une semaine dans l'historique."""
+    """Enregistre ou met à jour la dépense d'une semaine (upsert par semaine)."""
     data = {
         "semaine_debut": str(payload.semaine_debut),
         "montant_estime": payload.montant_estime,
         "magasin_choisi": payload.magasin_choisi,
         "user_id": user_id,
     }
-    result = await _run(lambda: db.table("historique_depenses").insert(data).execute())
+    result = await _run(
+        lambda: (
+            db.table("historique_depenses")
+            .upsert(data, on_conflict="semaine_debut,user_id")
+            .execute()
+        )
+    )
     if not result.data:
         raise HTTPException(
             status_code=400, detail="Échec de l'enregistrement de la dépense"
