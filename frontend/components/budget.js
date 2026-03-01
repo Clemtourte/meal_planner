@@ -239,20 +239,11 @@ function _renderHistorique() {
 
   const tableRows = _historique
     .map((h) => {
-      const ecart =
-        budgetHebdo !== null ? h.montant_estime - budgetHebdo : null;
-      const ecartHTML =
-        ecart !== null
-          ? `<span class="${ecart > 0 ? "text-danger" : "text-success"}">
-               ${ecart > 0 ? "+" : ""}${ecart.toFixed(2)} €
-             </span>`
-          : "—";
       return `
         <tr>
           <td>${_escB(h.semaine_debut)}</td>
           <td class="text-center">${h.montant_estime.toFixed(2)} €</td>
           <td class="text-center">${_escB(h.magasin_choisi || "—")}</td>
-          <td class="text-center">${ecartHTML}</td>
           <td class="text-center">
             <button class="btn btn-xs btn-danger" title="Supprimer"
               onclick="_deleteHistorique('${h.id}')">🗑</button>
@@ -269,7 +260,6 @@ function _renderHistorique() {
           <th>Semaine</th>
           <th class="text-center">Coût estimé</th>
           <th class="text-center">Magasin principal</th>
-          <th class="text-center">ÉCART</th>
           <th class="text-center"></th>
         </tr>
       </thead>
