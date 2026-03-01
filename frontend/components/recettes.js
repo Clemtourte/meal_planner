@@ -150,6 +150,7 @@ function _renderRecettes() {
           ? `<div class="rec-tags">${r.tags.map((t) => `<span class="rec-tag">${_escR(t)}</span>`).join("")}</div>`
           : ""
       }
+      ${_renderRecetteBadges(r)}
     </div>`
     )
     .join("");
@@ -196,6 +197,9 @@ function _bindRecetteEvents() {
   const btnAddRow = document.getElementById("btn-add-ing-row");
   if (btnAddRow) btnAddRow.onclick = () => _addIngredientRow();
 
+  const btnAddStep = document.getElementById("btn-add-step");
+  if (btnAddStep) btnAddStep.onclick = () => _addStepRow();
+
   const search = document.getElementById("recette-search");
   if (search) {
     search.oninput = () => {
@@ -224,6 +228,7 @@ function openAddRecette() {
   document.getElementById("modal-recette-title").textContent = "Nouvelle recette";
   document.getElementById("form-recette").reset();
   document.getElementById("rec-ing-rows").innerHTML = "";
+  document.getElementById("rec-steps-list").innerHTML = "";
   document.getElementById("rec-ingredients-section").style.display = "block";
   showModal("modal-recette");
 }
@@ -236,9 +241,64 @@ function openEditRecette(id) {
   document.getElementById("rec-nom").value = rec.nom;
   document.getElementById("rec-portions").value = rec.nb_portions;
   document.getElementById("rec-desc").value = rec.description || "";
+  document.getElementById("rec-temps-prep").value = rec.temps_preparation || "";
+  document.getElementById("rec-temps-cuisson").value = rec.temps_cuisson || "";
+  document.getElementById("rec-difficulte").value = rec.difficulte || "";
   document.getElementById("rec-tags").value = (rec.tags || []).join(", ");
+  const stepsList = document.getElementById("rec-steps-list");
+  stepsList.innerHTML = "";
+  (rec.instructions || []).forEach((txt) => _addStepRow(txt));
   document.getElementById("rec-ingredients-section").style.display = "none";
   showModal("modal-recette");
+}
+
+// ---------------------------------------------------------------------------
+// Gestion des étapes d'instructions
+// ---------------------------------------------------------------------------
+
+function _addStepRow(text = "") {
+  const container = document.getElementById("rec-steps-list");
+  const idx = container.children.length + 1;
+  const row = document.createElement("div");
+  row.className = "step-row";
+  row.innerHTML = `
+    <span style="min-width:22px;font-weight:600;padding-top:10px;color:var(--color-text-muted)">${idx}.</span>
+    <textarea placeholder="Décrivez l'étape ${idx}…" rows="2">${_escR(text)}</textarea>
+    <div class="step-controls">
+      <button type="button" class="btn btn-xs btn-outline" onclick="_moveStep(this,-1)" title="Monter">↑</button>
+      <button type="button" class="btn btn-xs btn-outline" onclick="_moveStep(this,1)" title="Descendre">↓</button>
+      <button type="button" class="btn btn-xs btn-danger" onclick="this.closest('.step-row').remove();_renumberSteps()" title="Supprimer">×</button>
+    </div>
+  `;
+  container.appendChild(row);
+}
+
+function _moveStep(btn, dir) {
+  const row = btn.closest(".step-row");
+  const container = row.parentElement;
+  const rows = [...container.children];
+  const idx = rows.indexOf(row);
+  const target = rows[idx + dir];
+  if (!target) return;
+  if (dir === -1) container.insertBefore(row, target);
+  else container.insertBefore(target, row);
+  _renumberSteps();
+}
+
+function _renumberSteps() {
+  const rows = document.querySelectorAll("#rec-steps-list .step-row");
+  rows.forEach((row, i) => {
+    const num = row.querySelector("span");
+    if (num) num.textContent = `${i + 1}.`;
+    const ta = row.querySelector("textarea");
+    if (ta) ta.placeholder = `Décrivez l'étape ${i + 1}…`;
+  });
+}
+
+function _getInstructions() {
+  return [...document.querySelectorAll("#rec-steps-list .step-row textarea")]
+    .map((ta) => ta.value.trim())
+    .filter(Boolean);
 }
 
 // ---------------------------------------------------------------------------
@@ -398,14 +458,20 @@ async function submitRecetteForm(e) {
   const nb_portions = parseInt(document.getElementById("rec-portions").value, 10);
   const description = document.getElementById("rec-desc").value.trim() || null;
   const tags = _parseTags();
+  const temps_preparation = parseInt(document.getElementById("rec-temps-prep").value, 10) || null;
+  const temps_cuisson = parseInt(document.getElementById("rec-temps-cuisson").value, 10) || null;
+  const difficulte = document.getElementById("rec-difficulte").value || null;
+  const instructions = _getInstructions();
+
+  const basePayload = { nom, nb_portions, description, tags, temps_preparation, temps_cuisson, difficulte, instructions };
 
   try {
     if (_editingRecetteId) {
-      await apiPatch(`/recettes/${_editingRecetteId}`, { nom, nb_portions, description, tags });
+      await apiPatch(`/recettes/${_editingRecetteId}`, basePayload);
       showToast("Recette modifiée ✓");
     } else {
       // Étape 1 : créer la recette via POST /recettes
-      const recette = await apiPost("/recettes", { nom, nb_portions, description, tags });
+      const recette = await apiPost("/recettes", basePayload);
 
       // Étape 2 : ajouter les ingrédients un par un
       const rows = document.querySelectorAll("#rec-ing-rows .ri-row");
@@ -482,6 +548,23 @@ function _renderRecetteDetail() {
   document.getElementById("detail-recette-meta").textContent =
     `${rec.nb_portions} portion${rec.nb_portions > 1 ? "s" : ""}` +
     (rec.description ? ` · ${rec.description}` : "");
+
+  // Badges (temps + difficulté)
+  const badgesEl = document.getElementById("detail-recette-badges");
+  if (badgesEl) badgesEl.innerHTML = _renderRecetteBadges(rec);
+
+  // Instructions
+  const instrSection = document.getElementById("detail-instructions-section");
+  const instrList = document.getElementById("detail-instructions-list");
+  if (instrSection && instrList) {
+    const steps = rec.instructions || [];
+    if (steps.length > 0) {
+      instrList.innerHTML = steps.map((s) => `<li>${_escR(s)}</li>`).join("");
+      instrSection.style.display = "";
+    } else {
+      instrSection.style.display = "none";
+    }
+  }
 
   const tbody = document.getElementById("detail-ingredients-body");
   if (rec.ingredients.length === 0) {
@@ -623,6 +706,14 @@ async function removeIngredientFromRecette(recetteId, riId) {
   } catch (err) {
     showToast("Erreur : " + err.message, "error");
   }
+}
+
+function _renderRecetteBadges(r) {
+  const badges = [];
+  if (r.temps_preparation) badges.push(`<span class="badge badge-meta">🕐 ${r.temps_preparation} min</span>`);
+  if (r.temps_cuisson) badges.push(`<span class="badge badge-meta">🍳 ${r.temps_cuisson} min</span>`);
+  if (r.difficulte) badges.push(`<span class="badge badge-meta">⭐ ${_escR(r.difficulte)}</span>`);
+  return badges.length ? `<div class="recette-meta-badges">${badges.join("")}</div>` : "";
 }
 
 function _escR(str) {

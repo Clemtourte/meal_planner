@@ -419,6 +419,71 @@ input, select, textarea { font-family: inherit; }
   color: var(--color-success);
 }
 
+.badge-meta {
+  background: #F5F0E8;
+  color: #7a6040;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+}
+
+.recette-meta-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.form-group-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.step-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.step-row textarea {
+  flex: 1;
+  min-height: 48px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+}
+
+.step-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.instructions-list {
+  padding-left: 20px;
+  margin: 0 0 12px 0;
+}
+
+.instructions-list li {
+  padding: 6px 0;
+  line-height: 1.5;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.instructions-list li:last-child {
+  border-bottom: none;
+}
+
 /* ---------------------------------------------------------------------------
    Buttons
    --------------------------------------------------------------------------- */

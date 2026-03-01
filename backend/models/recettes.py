@@ -44,6 +44,10 @@ class RecetteBase(BaseModel):
     nb_portions: int = 4
     description: Optional[str] = None
     tags: list[str] = []
+    temps_preparation: Optional[int] = None
+    temps_cuisson: Optional[int] = None
+    difficulte: Optional[str] = None
+    instructions: list[str] = []
 
 
 class RecetteCreate(RecetteBase):
@@ -59,6 +63,10 @@ class RecetteCreateWithIngredients(BaseModel):
     nb_portions: int = 4
     description: Optional[str] = None
     tags: list[str] = []
+    temps_preparation: Optional[int] = None
+    temps_cuisson: Optional[int] = None
+    difficulte: Optional[str] = None
+    instructions: list[str] = []
     ingredients: list[RecetteIngredientCreate] = []
 
 
@@ -69,6 +77,10 @@ class RecetteUpdate(BaseModel):
     nb_portions: Optional[int] = None
     description: Optional[str] = None
     tags: Optional[list[str]] = None
+    temps_preparation: Optional[int] = None
+    temps_cuisson: Optional[int] = None
+    difficulte: Optional[str] = None
+    instructions: Optional[list[str]] = None
 
 
 class RecetteResponse(RecetteBase):

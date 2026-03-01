@@ -242,6 +242,30 @@
           <label for="rec-desc">Description (optionnelle)</label>
           <textarea id="rec-desc" rows="2" placeholder="Notes, instructions générales…"></textarea>
         </div>
+        <div class="form-group-row">
+          <div class="form-group">
+            <label for="rec-temps-prep">Préparation (min)</label>
+            <input id="rec-temps-prep" type="number" min="0" step="1" placeholder="ex : 15" />
+          </div>
+          <div class="form-group">
+            <label for="rec-temps-cuisson">Cuisson (min)</label>
+            <input id="rec-temps-cuisson" type="number" min="0" step="1" placeholder="ex : 30" />
+          </div>
+          <div class="form-group">
+            <label for="rec-difficulte">Difficulté</label>
+            <select id="rec-difficulte">
+              <option value="">— Non spécifiée —</option>
+              <option value="facile">Facile</option>
+              <option value="moyen">Moyen</option>
+              <option value="difficile">Difficile</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Instructions (étapes)</label>
+          <div id="rec-steps-list" class="steps-list"></div>
+          <button type="button" class="btn btn-outline btn-sm" id="btn-add-step" style="margin-top:6px">+ Ajouter une étape</button>
+        </div>
         <div class="form-group">
           <label for="rec-tags">Tags (séparés par des virgules)</label>
           <input id="rec-tags" type="text" placeholder="ex : végétarien, rapide, four…" />
@@ -273,6 +297,11 @@
         <button class="modal-close" onclick="hideModal('modal-recette-detail')" aria-label="Fermer">×</button>
       </div>
 
+      <div id="detail-recette-badges" class="recette-meta-badges" style="margin-bottom:8px"></div>
+      <div id="detail-instructions-section" style="display:none">
+        <p class="modal-section-title">Préparation</p>
+        <ol id="detail-instructions-list" class="instructions-list"></ol>
+      </div>
       <p class="modal-section-title">Ingrédients de la recette</p>
       <table class="detail-table">
         <thead>
