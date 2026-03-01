@@ -434,9 +434,14 @@ input, select, textarea { font-family: inherit; }
 }
 
 .form-group-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--space-sm);
+}
+
+.form-group-row .form-group {
+  flex: 1 1 120px;
+  min-width: 120px;
 }
 
 .steps-list {
