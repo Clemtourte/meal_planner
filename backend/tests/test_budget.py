@@ -64,6 +64,28 @@ def test_create_budget_hebdomadaire(client: TestClient) -> None:
         app.dependency_overrides.clear()
 
 
+def test_update_budget(client: TestClient) -> None:
+    """PATCH /api/budgets/{id} → 200 avec le budget mis à jour."""
+    updated = {**_BUDGET_HEBDO, "montant": 200.0}
+    mock = MagicMock()
+    result = MagicMock()
+    result.data = [updated]
+    (
+        mock.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value
+    ) = result
+    app.dependency_overrides[get_supabase] = lambda: mock
+    try:
+        response = client.patch(
+            f"/api/budgets/{_BUDGET_ID}",
+            json={"montant": 200.0},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert float(body["montant"]) == 200.0
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_create_budget_validation(client: TestClient) -> None:
     """POST /api/budgets/ avec un type invalide → 422."""
     response = client.post(

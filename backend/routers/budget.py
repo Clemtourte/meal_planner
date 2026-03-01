@@ -11,6 +11,7 @@ from backend.dependencies import get_user_id
 from backend.models.budget import (
     Budget,
     BudgetCreate,
+    BudgetUpdate,
     DepenseHistorique,
     DepenseHistoriqueCreate,
 )
@@ -70,6 +71,28 @@ async def get_budget_actuel(
             seen.add(row["type"])
             budgets.append(row)
     return budgets
+
+
+@router.patch("/{budget_id}", response_model=Budget)
+async def update_budget(
+    budget_id: str,
+    payload: BudgetUpdate,
+    db: Client = Depends(get_supabase),
+    user_id: str = Depends(get_user_id),
+) -> dict:
+    """Met à jour le montant d'un budget existant."""
+    result = await _run(
+        lambda: (
+            db.table("budgets")
+            .update({"montant": payload.montant})
+            .eq("id", budget_id)
+            .eq("user_id", user_id)
+            .execute()
+        )
+    )
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Budget introuvable")
+    return result.data[0]
 
 
 # ---------------------------------------------------------------------------

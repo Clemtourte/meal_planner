@@ -23,6 +23,12 @@ class Budget(BaseModel):
     date_debut: date
 
 
+class BudgetUpdate(BaseModel):
+    """Payload pour mettre à jour le montant d'un budget existant."""
+
+    montant: float
+
+
 class DepenseHistoriqueCreate(BaseModel):
     """Payload pour enregistrer la dépense estimée d'une semaine."""
 

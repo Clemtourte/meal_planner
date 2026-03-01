@@ -64,18 +64,18 @@ function _bindBudgetForm() {
     const today = new Date().toISOString().split("T")[0];
     try {
       if (!isNaN(hebdo) && hebdo > 0) {
-        await apiPost("/budgets/", {
-          type: "hebdomadaire",
-          montant: hebdo,
-          date_debut: today,
-        });
+        if (_budgets.hebdomadaire?.id) {
+          await apiPatch(`/budgets/${_budgets.hebdomadaire.id}`, { montant: hebdo });
+        } else {
+          await apiPost("/budgets/", { type: "hebdomadaire", montant: hebdo, date_debut: today });
+        }
       }
       if (!isNaN(mensuel) && mensuel > 0) {
-        await apiPost("/budgets/", {
-          type: "mensuel",
-          montant: mensuel,
-          date_debut: today,
-        });
+        if (_budgets.mensuel?.id) {
+          await apiPatch(`/budgets/${_budgets.mensuel.id}`, { montant: mensuel });
+        } else {
+          await apiPost("/budgets/", { type: "mensuel", montant: mensuel, date_debut: today });
+        }
       }
       showToast("Budget enregistré ✓");
       await _loadBudgets();
