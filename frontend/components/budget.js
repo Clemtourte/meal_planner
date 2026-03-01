@@ -4,6 +4,9 @@
 
 let _budgets = {};
 let _historique = [];
+let _currentWeekDebutStr = null;
+let _currentWeekCout = null;
+let _currentWeekMagasin = null;
 
 async function initBudget() {
   await _loadBudgets();
@@ -109,6 +112,15 @@ async function _renderSemaineCourante() {
     const data = await apiGet(`/courses/?debut=${debutStr}`);
     const cout = data.cout_total_estime;
 
+    // Mémoriser pour le bouton Valider
+    _currentWeekDebutStr = debutStr;
+    _currentWeekCout = cout;
+    const magasins = Object.entries(data.cout_par_magasin || {});
+    _currentWeekMagasin =
+      magasins.length > 0
+        ? magasins.sort(([, a], [, b]) => b - a)[0][0]
+        : null;
+
     if (cout === null) {
       section.innerHTML =
         '<p class="empty-state">Aucun coût estimé pour la semaine en cours (aucun prix renseigné).</p>';
@@ -155,10 +167,31 @@ async function _renderSemaineCourante() {
         ${kpiHebdo}
       </div>
       ${progressBar}
+      <div class="btn-valider-courses" style="margin-top:12px">
+        <button class="btn btn-outline btn-sm" onclick="_validateSemaineBudget()">
+          ✓ Enregistrer dans l'historique
+        </button>
+      </div>
     `;
   } catch {
     section.innerHTML =
       '<p class="empty-state">Impossible de charger le coût de la semaine en cours.</p>';
+  }
+}
+
+async function _validateSemaineBudget() {
+  if (_currentWeekCout === null || !_currentWeekDebutStr) return;
+  try {
+    await apiPost("/budgets/historique", {
+      semaine_debut: _currentWeekDebutStr,
+      montant_estime: _currentWeekCout,
+      magasin_choisi: _currentWeekMagasin,
+    });
+    showToast("Dépense enregistrée dans l'historique ✓");
+    await _loadHistorique();
+    _renderHistorique();
+  } catch (err) {
+    showToast("Erreur : " + err.message, "error");
   }
 }
 
