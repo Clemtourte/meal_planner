@@ -1,5 +1,6 @@
 /**
  * Configuration globale de l'API.
- * Modifier BASE_URL si le backend tourne sur un autre port ou domaine.
+ * En production, définir window.ENV_API_URL dans un script inline (ex: Vercel).
+ * Exemple : window.ENV_API_URL = "https://meal-planner-api.onrender.com/api"
  */
-const BASE_URL = "http://localhost:8000/api";
+const BASE_URL = window.ENV_API_URL || "http://localhost:8000";

@@ -1,10 +1,15 @@
 """Point d'entrée de l'application FastAPI — Meal Planner."""
 
+import os
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from backend.routers import budget, calendrier, courses, ingredients, recettes
+
+_allowed_origins_raw = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5500")
+_allowed_origins = [o.strip() for o in _allowed_origins_raw.split(",")]
 
 app = FastAPI(
     title="Meal Planner API",
@@ -14,7 +19,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
