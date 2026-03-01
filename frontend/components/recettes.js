@@ -12,6 +12,11 @@ let _activeTag = null;
 // Cache des prix par ingredient_id → array de prix
 const _priceCache = new Map();
 
+/** Vide le cache des prix (à appeler après toute modification de prix). */
+function clearPriceCache() {
+  _priceCache.clear();
+}
+
 // ---------------------------------------------------------------------------
 // Conversion d'unités (miroir de la logique backend _to_base)
 // ---------------------------------------------------------------------------

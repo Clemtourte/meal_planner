@@ -274,6 +274,7 @@ async function savePrix(ingId, prixId) {
       magasin, prix, quantite_reference, unite_reference,
     });
     showToast("Prix mis à jour ✓");
+    clearPriceCache();
     await _loadAndRenderPrix(ingId);
   } catch (err) {
     showToast("Erreur : " + err.message, "error");
@@ -293,6 +294,7 @@ async function addPrix(e, ingId) {
     await apiPost(`/ingredients/${ingId}/prix`, data);
     showToast("Prix ajouté ✓");
     form.reset();
+    clearPriceCache();
     await _loadAndRenderPrix(ingId);
   } catch (err) {
     showToast("Erreur : " + err.message, "error");
@@ -303,6 +305,7 @@ async function deletePrix(ingId, prixId) {
   try {
     await apiDelete(`/ingredients/${ingId}/prix/${prixId}`);
     showToast("Prix supprimé");
+    clearPriceCache();
     await _loadAndRenderPrix(ingId);
   } catch (err) {
     showToast("Erreur : " + err.message, "error");
