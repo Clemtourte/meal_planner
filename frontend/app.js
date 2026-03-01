@@ -108,7 +108,7 @@ function hideModal(modalId) {
 // Fermer une modale en cliquant sur l'overlay
 document.addEventListener("click", (e) => {
   if (e.target.classList.contains("modal-overlay")) {
-    e.target.style.display = "none";
+    hideModal(e.target.id);
   }
 });
 
@@ -148,6 +148,7 @@ function switchTab(tabName) {
       initIngredients();
       break;
     case "recettes":
+      clearPriceCache();
       initRecettes();
       break;
     case "calendrier":
