@@ -63,7 +63,7 @@ async def create_or_update_repas(
 ) -> dict:
     """Crée ou remplace un repas dans le calendrier.
 
-    Contrainte unique : date + type_repas.
+    Contrainte unique : date + type_repas + user_id.
     """
     data: dict = repas.model_dump()
     data["date"] = str(data["date"])
@@ -74,7 +74,7 @@ async def create_or_update_repas(
     result = await _run(
         lambda: (
             db.table("semaine_repas")
-            .upsert(data, on_conflict="date,type_repas")
+            .upsert(data, on_conflict="date,type_repas,user_id")
             .execute()
         )
     )
