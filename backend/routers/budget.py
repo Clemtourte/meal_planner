@@ -143,3 +143,21 @@ async def add_historique(
             status_code=400, detail="Échec de l'enregistrement de la dépense"
         )
     return result.data[0]
+
+
+@router.delete("/historique/{historique_id}", status_code=204)
+async def delete_historique(
+    historique_id: str,
+    db: Client = Depends(get_supabase),
+    user_id: str = Depends(get_user_id),
+) -> None:
+    """Supprime une entrée de l'historique des dépenses."""
+    await _run(
+        lambda: (
+            db.table("historique_depenses")
+            .delete()
+            .eq("id", historique_id)
+            .eq("user_id", user_id)
+            .execute()
+        )
+    )

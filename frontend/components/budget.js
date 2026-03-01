@@ -253,6 +253,10 @@ function _renderHistorique() {
           <td class="text-center">${h.montant_estime.toFixed(2)} €</td>
           <td class="text-center">${_escB(h.magasin_choisi || "—")}</td>
           <td class="text-center">${ecartHTML}</td>
+          <td class="text-center">
+            <button class="btn btn-xs btn-danger" title="Supprimer"
+              onclick="_deleteHistorique('${h.id}')">🗑</button>
+          </td>
         </tr>`;
     })
     .join("");
@@ -265,12 +269,25 @@ function _renderHistorique() {
           <th>Semaine</th>
           <th class="text-center">Coût estimé</th>
           <th class="text-center">Magasin principal</th>
-          <th class="text-center">Écart vs budget</th>
+          <th class="text-center">ÉCART</th>
+          <th class="text-center"></th>
         </tr>
       </thead>
       <tbody>${tableRows}</tbody>
     </table>
   `;
+}
+
+async function _deleteHistorique(id) {
+  if (!confirm("Supprimer cette entrée de l'historique ?")) return;
+  try {
+    await apiDelete(`/budgets/historique/${id}`);
+    showToast("Entrée supprimée");
+    await _loadHistorique();
+    _renderHistorique();
+  } catch (err) {
+    showToast("Erreur : " + err.message, "error");
+  }
 }
 
 function _escB(str) {

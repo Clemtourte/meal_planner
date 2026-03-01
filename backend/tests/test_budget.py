@@ -141,6 +141,22 @@ def test_add_historique(client: TestClient) -> None:
         app.dependency_overrides.clear()
 
 
+def test_delete_historique(client: TestClient) -> None:
+    """DELETE /api/budgets/historique/{id} → 204."""
+    mock = MagicMock()
+    result = MagicMock()
+    result.data = []
+    (
+        mock.table.return_value.delete.return_value.eq.return_value.eq.return_value.execute.return_value
+    ) = result
+    app.dependency_overrides[get_supabase] = lambda: mock
+    try:
+        response = client.delete(f"/api/budgets/historique/{_HISTORIQUE_ID}")
+        assert response.status_code == 204
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_get_historique(client: TestClient) -> None:
     """GET /api/budgets/historique → 200 avec la liste des dépenses."""
     app.dependency_overrides[get_supabase] = lambda: _mock_budget_select(
