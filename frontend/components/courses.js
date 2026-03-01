@@ -1,9 +1,13 @@
 /**
  * courses.js — Liste de courses agrégée pour une semaine, avec export PDF.
+ * Includes real-time collaborative check-off via 5s polling.
  */
 
 let _coursesWeekStart = null;
 let _lastCoursesData = null;
+let _checksState = {}; // ingredient_id → CourseCheck object
+let _pollInterval = null;
+let _currentCheckedSemaine = null;
 
 function initCourses() {
   if (!_coursesWeekStart) {
@@ -77,6 +81,17 @@ async function generateCourses() {
     _lastCoursesData = { data, debutStr };
     _renderCoursesList(data);
     btnPdf.style.display = "inline-flex";
+
+    // Charger et appliquer les checks, puis démarrer le polling
+    _currentCheckedSemaine = debutStr;
+    await _loadAndApplyChecks(debutStr);
+    _startPolling(debutStr);
+
+    // Déléguer le clic sur les lignes pour le check-off
+    container.onclick = (e) => {
+      const row = e.target.closest(".courses-category tbody tr[data-ingredient-id]");
+      if (row) _toggleCheck(row.dataset.ingredientId, _currentCheckedSemaine);
+    };
   } catch (err) {
     container.innerHTML = `<p class="error-text">Erreur : ${_escCo(err.message)}</p>`;
     showToast("Erreur génération : " + err.message, "error");
@@ -128,8 +143,11 @@ function _renderCoursesList(data) {
             item.cout_estime !== null ? `${item.cout_estime.toFixed(2)} €` : "—";
           const magasin = item.magasin_moins_cher || "—";
           return `
-          <tr>
-            <td>${_escCo(item.nom)}</td>
+          <tr data-ingredient-id="${item.ingredient_id}" style="cursor:pointer">
+            <td>
+              ${_escCo(item.nom)}
+              <span class="check-by-info" style="display:none;font-size:0.7em;color:#888;margin-left:6px"></span>
+            </td>
             <td class="text-center">${item.quantite_totale % 1 === 0 ? item.quantite_totale : item.quantite_totale.toFixed(3)}</td>
             <td class="text-center">${_escCo(item.unite)}</td>
             <td class="text-center courses-cout">${cout}</td>
@@ -207,6 +225,73 @@ async function exportPdf() {
     showToast("PDF téléchargé ✓");
   } catch (err) {
     showToast("Erreur export PDF : " + err.message, "error");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Checks collaboratifs
+// ---------------------------------------------------------------------------
+
+async function _loadAndApplyChecks(semaine) {
+  try {
+    const checks = await apiGet(`/courses/checks?semaine=${semaine}`);
+    _checksState = {};
+    for (const c of checks) {
+      _checksState[c.ingredient_id] = c;
+    }
+    _applyChecksToUI();
+  } catch (e) {
+    console.warn("Checks unavailable:", e.message);
+  }
+}
+
+function _applyChecksToUI() {
+  document
+    .querySelectorAll(".courses-category tbody tr[data-ingredient-id]")
+    .forEach((row) => {
+      const ingId = row.dataset.ingredientId;
+      const check = _checksState[ingId];
+      const bySpan = row.querySelector(".check-by-info");
+      if (check?.checked) {
+        row.classList.add("item-checked");
+        if (bySpan) {
+          bySpan.textContent = `✓ ${check.checked_by || "autre utilisateur"}`;
+          bySpan.style.display = "inline";
+        }
+      } else {
+        row.classList.remove("item-checked");
+        if (bySpan) bySpan.style.display = "none";
+      }
+    });
+}
+
+async function _toggleCheck(ingredientId, semaine) {
+  const current = _checksState[ingredientId];
+  const newChecked = !current?.checked;
+  try {
+    const updated = await apiPut(`/courses/checks/${ingredientId}`, {
+      semaine_debut: semaine,
+      checked: newChecked,
+    });
+    _checksState[ingredientId] = updated;
+    _applyChecksToUI();
+  } catch (e) {
+    showToast("Erreur synchro : " + e.message, "error");
+  }
+}
+
+function _startPolling(semaine) {
+  _stopPolling();
+  _pollInterval = setInterval(async () => {
+    if (currentTab !== "courses" || document.visibilityState === "hidden") return;
+    await _loadAndApplyChecks(semaine);
+  }, 5000);
+}
+
+function _stopPolling() {
+  if (_pollInterval) {
+    clearInterval(_pollInterval);
+    _pollInterval = null;
   }
 }
 

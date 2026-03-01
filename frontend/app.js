@@ -41,6 +41,19 @@ async function apiPatch(path, data) {
   return res.json();
 }
 
+async function apiPut(path, data) {
+  const res = await fetch(BASE_URL + path, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || "Erreur serveur");
+  }
+  return res.json();
+}
+
 async function apiDelete(path) {
   const url = BASE_URL + path;
   let res;
@@ -173,9 +186,5 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   switchTab("ingredients");
 
-  // Shopping list check-off toggle (courses category rows only)
-  document.getElementById("courses-result").addEventListener("click", (e) => {
-    const row = e.target.closest(".courses-category tbody tr");
-    if (row) row.classList.toggle("item-checked");
-  });
+  // Shopping list check-off handled by courses.js with API sync
 });

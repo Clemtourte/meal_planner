@@ -2,16 +2,23 @@
 
 import asyncio
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from io import BytesIO
 from typing import Any
+from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
 from supabase import Client
 
 from backend.database import get_supabase
-from backend.models.courses import LigneCoursesItem, ListeCourses
+from backend.dependencies import get_user_id
+from backend.models.courses import (
+    CourseCheck,
+    CourseCheckUpsert,
+    LigneCoursesItem,
+    ListeCourses,
+)
 
 router = APIRouter()
 
@@ -231,6 +238,47 @@ async def _build_liste(debut: date, db: Client) -> ListeCourses:
         cout_total_estime=round(cout_total, 2) if has_prix else None,
         cout_par_magasin=cout_par_magasin,
     )
+
+
+@router.get("/checks", response_model=list[CourseCheck])
+async def get_checks(semaine: date, db: Client = Depends(get_supabase)) -> list[dict]:
+    """Retourne l'état des cases à cocher pour une semaine donnée."""
+    result = await _run(
+        lambda: (
+            db.table("courses_checks")
+            .select("*")
+            .eq("semaine_debut", str(semaine))
+            .execute()
+        )
+    )
+    return result.data
+
+
+@router.put("/checks/{ingredient_id}", response_model=CourseCheck)
+async def upsert_check(
+    ingredient_id: UUID,
+    payload: CourseCheckUpsert,
+    db: Client = Depends(get_supabase),
+    user_id: str = Depends(get_user_id),
+) -> dict:
+    """Coche ou décoche un ingrédient pour une semaine (upsert)."""
+    data = {
+        "semaine_debut": str(payload.semaine_debut),
+        "ingredient_id": str(ingredient_id),
+        "checked": payload.checked,
+        "checked_by": user_id,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    result = await _run(
+        lambda: (
+            db.table("courses_checks")
+            .upsert(data, on_conflict="semaine_debut,ingredient_id")
+            .execute()
+        )
+    )
+    if not result.data:
+        raise HTTPException(status_code=400, detail="Échec de la mise à jour")
+    return result.data[0]
 
 
 @router.get("/", response_model=ListeCourses)
