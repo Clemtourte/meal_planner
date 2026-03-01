@@ -82,7 +82,6 @@ function _bindBudgetForm() {
       }
       showToast("Budget enregistré ✓");
       await _loadBudgets();
-      _renderBudgetForm();
       await _renderSemaineCourante();
     } catch (err) {
       showToast("Erreur : " + err.message, "error");
