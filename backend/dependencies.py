@@ -7,7 +7,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from supabase import Client
 
-from backend.database import get_supabase
+from backend.database import get_supabase_auth
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ _bearer = HTTPBearer(auto_error=False)
 
 async def get_user_id(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
-    db: Client = Depends(get_supabase),
+    db: Client = Depends(get_supabase_auth),
 ) -> str:
     """Vérifie le JWT Supabase et retourne l'UUID de l'utilisateur.
 
