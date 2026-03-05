@@ -51,16 +51,12 @@ async def create_budget(
 @router.get("/actuel", response_model=list[Budget])
 async def get_budget_actuel(
     db: Client = Depends(get_supabase),
-    user_id: str = Depends(get_user_id),
+    _user_id: str = Depends(get_user_id),
 ) -> list[dict]:
     """Retourne les budgets les plus récents (hebdomadaire et mensuel)."""
     result = await _run(
         lambda: (
-            db.table("budgets")
-            .select("*")
-            .eq("user_id", user_id)
-            .order("date_debut", desc=True)
-            .execute()
+            db.table("budgets").select("*").order("date_debut", desc=True).execute()
         )
     )
     # Renvoie le budget le plus récent de chaque type
@@ -78,7 +74,7 @@ async def update_budget(
     budget_id: str,
     payload: BudgetUpdate,
     db: Client = Depends(get_supabase),
-    user_id: str = Depends(get_user_id),
+    _user_id: str = Depends(get_user_id),
 ) -> dict:
     """Met à jour le montant d'un budget existant."""
     result = await _run(
@@ -86,7 +82,6 @@ async def update_budget(
             db.table("budgets")
             .update({"montant": payload.montant})
             .eq("id", budget_id)
-            .eq("user_id", user_id)
             .execute()
         )
     )
@@ -103,14 +98,13 @@ async def update_budget(
 @router.get("/historique", response_model=list[DepenseHistorique])
 async def get_historique(
     db: Client = Depends(get_supabase),
-    user_id: str = Depends(get_user_id),
+    _user_id: str = Depends(get_user_id),
 ) -> list[dict]:
     """Retourne l'historique des dépenses estimées, du plus récent au plus ancien."""
     result = await _run(
         lambda: (
             db.table("historique_depenses")
             .select("*")
-            .eq("user_id", user_id)
             .order("semaine_debut", desc=True)
             .execute()
         )
@@ -134,7 +128,7 @@ async def add_historique(
     result = await _run(
         lambda: (
             db.table("historique_depenses")
-            .upsert(data, on_conflict="semaine_debut,user_id")
+            .upsert(data, on_conflict="semaine_debut")
             .execute()
         )
     )
@@ -149,15 +143,11 @@ async def add_historique(
 async def delete_historique(
     historique_id: str,
     db: Client = Depends(get_supabase),
-    user_id: str = Depends(get_user_id),
+    _user_id: str = Depends(get_user_id),
 ) -> None:
     """Supprime une entrée de l'historique des dépenses."""
     await _run(
         lambda: (
-            db.table("historique_depenses")
-            .delete()
-            .eq("id", historique_id)
-            .eq("user_id", user_id)
-            .execute()
+            db.table("historique_depenses").delete().eq("id", historique_id).execute()
         )
     )

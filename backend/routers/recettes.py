@@ -72,17 +72,11 @@ async def _get_recette_detail(recette_id: str, db: Client) -> dict:
 @router.get("/", response_model=list[RecetteResponse])
 async def list_recettes(
     db: Client = Depends(get_supabase),
-    user_id: str = Depends(get_user_id),
+    _user_id: str = Depends(get_user_id),
 ) -> list[dict]:
-    """Retourne toutes les recettes de l'utilisateur, triées par nom."""
+    """Retourne toutes les recettes, triées par nom."""
     result = await _run(
-        lambda: (
-            db.table("recettes")
-            .select("*")
-            .eq("user_id", user_id)
-            .order("nom")
-            .execute()
-        )
+        lambda: (db.table("recettes").select("*").order("nom").execute())
     )
     return result.data
 

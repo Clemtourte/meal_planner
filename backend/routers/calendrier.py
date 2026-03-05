@@ -24,7 +24,7 @@ async def _run(fn: Any) -> Any:
 async def get_semaine(
     debut: date,
     db: Client = Depends(get_supabase),
-    user_id: str = Depends(get_user_id),
+    _user_id: str = Depends(get_user_id),
 ) -> list[dict]:
     """Retourne tous les repas planifiés pour la semaine commençant à 'debut'."""
     fin = debut + timedelta(days=6)
@@ -32,7 +32,6 @@ async def get_semaine(
         lambda: (
             db.table("semaine_repas")
             .select("*, recettes(nom)")
-            .eq("user_id", user_id)
             .gte("date", str(debut))
             .lte("date", str(fin))
             .order("date")
@@ -74,7 +73,7 @@ async def create_or_update_repas(
     result = await _run(
         lambda: (
             db.table("semaine_repas")
-            .upsert(data, on_conflict="date,type_repas,user_id")
+            .upsert(data, on_conflict="date,type_repas")
             .execute()
         )
     )

@@ -46,12 +46,12 @@ def _mock_budget_upsert(data: list) -> MagicMock:
 
 
 def _mock_budget_select(data: list) -> MagicMock:
-    """Mock pour table().select().eq().order().execute()."""
+    """Mock pour table().select().order().execute()."""
     mock = MagicMock()
     result = MagicMock()
     result.data = data
     chain = mock.table.return_value.select.return_value
-    chain.eq.return_value.order.return_value.execute.return_value = result
+    chain.order.return_value.execute.return_value = result
     return mock
 
 
@@ -80,7 +80,7 @@ def test_update_budget(client: TestClient) -> None:
     result = MagicMock()
     result.data = [updated]
     (
-        mock.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value
+        mock.table.return_value.update.return_value.eq.return_value.execute.return_value
     ) = result
     app.dependency_overrides[get_supabase] = lambda: mock
     try:
@@ -147,7 +147,7 @@ def test_delete_historique(client: TestClient) -> None:
     result = MagicMock()
     result.data = []
     (
-        mock.table.return_value.delete.return_value.eq.return_value.eq.return_value.execute.return_value
+        mock.table.return_value.delete.return_value.eq.return_value.execute.return_value
     ) = result
     app.dependency_overrides[get_supabase] = lambda: mock
     try:

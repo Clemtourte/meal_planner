@@ -80,7 +80,7 @@ async def _run(fn: Any) -> Any:
 # ---------------------------------------------------------------------------
 
 
-async def _build_liste(debut: date, db: Client, user_id: str) -> ListeCourses:
+async def _build_liste(debut: date, db: Client) -> ListeCourses:
     """
     Génère la liste de courses agrégée pour la semaine commençant à 'debut'.
 
@@ -93,12 +93,11 @@ async def _build_liste(debut: date, db: Client, user_id: str) -> ListeCourses:
     """
     fin = debut + timedelta(days=6)
 
-    # 1. Repas de la semaine avec leur recette (filtrés par user)
+    # 1. Repas de la semaine avec leur recette (espace partagé)
     repas_result = await _run(
         lambda: (
             db.table("semaine_repas")
             .select("*, recettes(id, nb_portions)")
-            .eq("user_id", user_id)
             .gte("date", str(debut))
             .lte("date", str(fin))
             .execute()
@@ -290,17 +289,17 @@ async def upsert_check(
 async def get_liste_courses(
     debut: date,
     db: Client = Depends(get_supabase),
-    user_id: str = Depends(get_user_id),
+    _user_id: str = Depends(get_user_id),
 ) -> ListeCourses:
     """Génère la liste de courses pour la semaine commençant à la date 'debut'."""
-    return await _build_liste(debut, db, user_id)
+    return await _build_liste(debut, db)
 
 
 @router.get("/pdf")
 async def export_pdf(
     debut: date,
     db: Client = Depends(get_supabase),
-    user_id: str = Depends(get_user_id),
+    _user_id: str = Depends(get_user_id),
 ) -> Response:
     """Exporte la liste de courses en PDF via reportlab."""
     from reportlab.lib import colors
@@ -315,7 +314,7 @@ async def export_pdf(
         TableStyle,
     )
 
-    liste = await _build_liste(debut, db, user_id)
+    liste = await _build_liste(debut, db)
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
