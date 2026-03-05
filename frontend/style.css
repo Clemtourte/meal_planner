@@ -193,6 +193,16 @@ input, select, textarea { font-family: inherit; }
   white-space: nowrap;
 }
 
+/* Bouton logout dans le header — fond sombre, donc on force blanc */
+.app-header-actions .btn-outline {
+  border-color: rgba(255,255,255,.55);
+  color: white;
+}
+.app-header-actions .btn-outline:hover {
+  background: rgba(255,255,255,.15);
+  border-color: white;
+}
+
 /* ---------------------------------------------------------------------------
    Auth screen
    --------------------------------------------------------------------------- */
