@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from supabase import Client
 
 from backend.database import get_supabase
+from backend.dependencies import get_user_id
 from backend.models.ingredients import (
     IngredientCreate,
     IngredientResponse,
@@ -36,7 +37,10 @@ async def _run(fn: Any) -> Any:
 
 
 @router.get("/", response_model=list[IngredientResponse])
-async def list_ingredients(db: Client = Depends(get_supabase)) -> list[dict]:
+async def list_ingredients(
+    db: Client = Depends(get_supabase),
+    _user_id: str = Depends(get_user_id),
+) -> list[dict]:
     """Retourne tous les ingrédients triés par nom."""
     result = await _run(
         lambda: db.table("ingredients").select("*").order("nom").execute()
@@ -46,7 +50,9 @@ async def list_ingredients(db: Client = Depends(get_supabase)) -> list[dict]:
 
 @router.post("/", response_model=IngredientResponse, status_code=201)
 async def create_ingredient(
-    ingredient: IngredientCreate, db: Client = Depends(get_supabase)
+    ingredient: IngredientCreate,
+    db: Client = Depends(get_supabase),
+    _user_id: str = Depends(get_user_id),
 ) -> dict:
     """Crée un nouvel ingrédient."""
     result = await _run(
@@ -61,7 +67,9 @@ async def create_ingredient(
 
 @router.get("/{ingredient_id}", response_model=IngredientResponse)
 async def get_ingredient(
-    ingredient_id: UUID, db: Client = Depends(get_supabase)
+    ingredient_id: UUID,
+    db: Client = Depends(get_supabase),
+    _user_id: str = Depends(get_user_id),
 ) -> dict:
     """Retourne un ingrédient par son identifiant."""
     result = await _run(
@@ -79,6 +87,7 @@ async def update_ingredient(
     ingredient_id: UUID,
     ingredient: IngredientUpdate,
     db: Client = Depends(get_supabase),
+    _user_id: str = Depends(get_user_id),
 ) -> dict:
     """Met à jour les champs d'un ingrédient."""
     update_data = ingredient.model_dump(exclude_none=True)
@@ -99,7 +108,9 @@ async def update_ingredient(
 
 @router.delete("/{ingredient_id}", status_code=204)
 async def delete_ingredient(
-    ingredient_id: UUID, db: Client = Depends(get_supabase)
+    ingredient_id: UUID,
+    db: Client = Depends(get_supabase),
+    _user_id: str = Depends(get_user_id),
 ) -> None:
     """Supprime un ingrédient et ses prix associés (cascade).
 
@@ -134,7 +145,9 @@ async def delete_ingredient(
 
 @router.get("/{ingredient_id}/prix", response_model=list[PrixResponse])
 async def list_prix(
-    ingredient_id: UUID, db: Client = Depends(get_supabase)
+    ingredient_id: UUID,
+    db: Client = Depends(get_supabase),
+    _user_id: str = Depends(get_user_id),
 ) -> list[dict]:
     """Retourne tous les prix d'un ingrédient, triés par magasin."""
     result = await _run(
@@ -151,7 +164,10 @@ async def list_prix(
 
 @router.post("/{ingredient_id}/prix", response_model=PrixResponse, status_code=201)
 async def add_prix(
-    ingredient_id: UUID, prix: PrixCreate, db: Client = Depends(get_supabase)
+    ingredient_id: UUID,
+    prix: PrixCreate,
+    db: Client = Depends(get_supabase),
+    _user_id: str = Depends(get_user_id),
 ) -> dict:
     """Ajoute un prix pour un ingrédient dans un magasin."""
     data = prix.model_dump()
@@ -168,6 +184,7 @@ async def update_prix(
     prix_id: UUID,
     prix: PrixUpdate,
     db: Client = Depends(get_supabase),
+    _user_id: str = Depends(get_user_id),
 ) -> dict:
     """Met à jour les champs d'un prix."""
     update_data = prix.model_dump(exclude_none=True)
@@ -189,7 +206,10 @@ async def update_prix(
 
 @router.delete("/{ingredient_id}/prix/{prix_id}", status_code=204)
 async def delete_prix(
-    ingredient_id: UUID, prix_id: UUID, db: Client = Depends(get_supabase)
+    ingredient_id: UUID,
+    prix_id: UUID,
+    db: Client = Depends(get_supabase),
+    _user_id: str = Depends(get_user_id),
 ) -> None:
     """Supprime un prix."""
     await _run(

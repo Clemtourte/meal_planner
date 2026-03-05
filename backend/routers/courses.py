@@ -80,7 +80,7 @@ async def _run(fn: Any) -> Any:
 # ---------------------------------------------------------------------------
 
 
-async def _build_liste(debut: date, db: Client) -> ListeCourses:
+async def _build_liste(debut: date, db: Client, user_id: str) -> ListeCourses:
     """
     Génère la liste de courses agrégée pour la semaine commençant à 'debut'.
 
@@ -93,11 +93,12 @@ async def _build_liste(debut: date, db: Client) -> ListeCourses:
     """
     fin = debut + timedelta(days=6)
 
-    # 1. Repas de la semaine avec leur recette
+    # 1. Repas de la semaine avec leur recette (filtrés par user)
     repas_result = await _run(
         lambda: (
             db.table("semaine_repas")
             .select("*, recettes(id, nb_portions)")
+            .eq("user_id", user_id)
             .gte("date", str(debut))
             .lte("date", str(fin))
             .execute()
@@ -241,7 +242,11 @@ async def _build_liste(debut: date, db: Client) -> ListeCourses:
 
 
 @router.get("/checks", response_model=list[CourseCheck])
-async def get_checks(semaine: date, db: Client = Depends(get_supabase)) -> list[dict]:
+async def get_checks(
+    semaine: date,
+    db: Client = Depends(get_supabase),
+    _user_id: str = Depends(get_user_id),
+) -> list[dict]:
     """Retourne l'état des cases à cocher pour une semaine donnée."""
     result = await _run(
         lambda: (
@@ -283,14 +288,20 @@ async def upsert_check(
 
 @router.get("/", response_model=ListeCourses)
 async def get_liste_courses(
-    debut: date, db: Client = Depends(get_supabase)
+    debut: date,
+    db: Client = Depends(get_supabase),
+    user_id: str = Depends(get_user_id),
 ) -> ListeCourses:
     """Génère la liste de courses pour la semaine commençant à la date 'debut'."""
-    return await _build_liste(debut, db)
+    return await _build_liste(debut, db, user_id)
 
 
 @router.get("/pdf")
-async def export_pdf(debut: date, db: Client = Depends(get_supabase)) -> Response:
+async def export_pdf(
+    debut: date,
+    db: Client = Depends(get_supabase),
+    user_id: str = Depends(get_user_id),
+) -> Response:
     """Exporte la liste de courses en PDF via reportlab."""
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4
@@ -304,7 +315,7 @@ async def export_pdf(debut: date, db: Client = Depends(get_supabase)) -> Respons
         TableStyle,
     )
 
-    liste = await _build_liste(debut, db)
+    liste = await _build_liste(debut, db, user_id)
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
