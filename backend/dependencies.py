@@ -1,11 +1,40 @@
 """Dépendances FastAPI partagées entre les routers."""
 
-from fastapi import Request
+import logging
+from typing import Annotated
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from supabase import Client
+
+from backend.database import get_supabase
+
+logger = logging.getLogger(__name__)
+
+_bearer = HTTPBearer(auto_error=False)
 
 
-def get_user_id(request: Request) -> str:
-    """Retourne l'identifiant utilisateur injecté par UserIDMiddleware.
+async def get_user_id(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+    db: Client = Depends(get_supabase),
+) -> str:
+    """Vérifie le JWT Supabase et retourne l'UUID de l'utilisateur.
 
-    Valeur par défaut : 'default_user' si le header X-User-ID est absent.
+    Lève HTTP 401 si le token est absent, invalide ou expiré.
     """
-    return getattr(request.state, "user_id", "default_user")
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token d'authentification manquant",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    try:
+        response = db.auth.get_user(credentials.credentials)
+        return response.user.id
+    except Exception as exc:
+        logger.warning("JWT invalide : %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token invalide ou expiré",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from exc

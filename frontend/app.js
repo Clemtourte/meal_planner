@@ -6,8 +6,19 @@
 // Helpers API
 // ---------------------------------------------------------------------------
 
+/** Construit les headers communs avec le JWT Supabase. */
+function _authHeaders(extra = {}) {
+  const token = getAccessToken();
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...extra,
+  };
+}
+
 async function apiGet(path) {
-  const res = await fetch(BASE_URL + path);
+  const res = await fetch(BASE_URL + path, {
+    headers: _authHeaders(),
+  });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(err.detail || "Erreur serveur");
@@ -18,7 +29,7 @@ async function apiGet(path) {
 async function apiPost(path, data) {
   const res = await fetch(BASE_URL + path, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: _authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(data),
   });
   if (!res.ok) {
@@ -31,7 +42,7 @@ async function apiPost(path, data) {
 async function apiPatch(path, data) {
   const res = await fetch(BASE_URL + path, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: _authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(data),
   });
   if (!res.ok) {
@@ -44,7 +55,7 @@ async function apiPatch(path, data) {
 async function apiPut(path, data) {
   const res = await fetch(BASE_URL + path, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: _authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(data),
   });
   if (!res.ok) {
@@ -58,7 +69,7 @@ async function apiDelete(path) {
   const url = BASE_URL + path;
   let res;
   try {
-    res = await fetch(url, { method: "DELETE" });
+    res = await fetch(url, { method: "DELETE", headers: _authHeaders() });
   } catch (networkErr) {
     console.error(`[DELETE ${url}] Network error:`, networkErr.message);
     throw networkErr;
@@ -180,7 +191,10 @@ function switchTab(tabName) {
 // Démarrage
 // ---------------------------------------------------------------------------
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  // Initialise l'auth Supabase — affiche login ou app selon l'état de session
+  await initAuth();
+
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => switchTab(btn.dataset.tab));
   });
