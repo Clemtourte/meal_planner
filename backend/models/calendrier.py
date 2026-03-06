@@ -13,6 +13,7 @@ class RepasBase(BaseModel):
     date: date
     type_repas: str  # "petit_dejeuner" | "dejeuner" | "diner"
     recette_id: Optional[UUID] = None
+    sortie_id: Optional[UUID] = None
     nb_personnes: int = 2
 
 
@@ -34,5 +35,8 @@ class RepasResponse(RepasBase):
 
     id: UUID
     recette_nom: Optional[str] = None
+    sortie_titre: Optional[str] = None
+    sortie_type: Optional[str] = None
+    sortie_montant: Optional[float] = None
 
     model_config = {"from_attributes": True}

@@ -34,7 +34,13 @@ async function apiPost(path, data) {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || "Erreur serveur");
+    const detail =
+      err.detail !== undefined
+        ? err.detail
+        : err.message !== undefined
+        ? err.message
+        : res.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
   }
   return res.json();
 }
@@ -47,7 +53,13 @@ async function apiPatch(path, data) {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || "Erreur serveur");
+    const detail =
+      err.detail !== undefined
+        ? err.detail
+        : err.message !== undefined
+        ? err.message
+        : res.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
   }
   return res.json();
 }
@@ -60,7 +72,13 @@ async function apiPut(path, data) {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || "Erreur serveur");
+    const detail =
+      err.detail !== undefined
+        ? err.detail
+        : err.message !== undefined
+        ? err.message
+        : res.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
   }
   return res.json();
 }

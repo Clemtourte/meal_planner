@@ -406,8 +406,22 @@
         <input type="hidden" id="repas-type" />
 
         <div class="form-group">
+          <label for="repas-choix">Type</label>
+          <select id="repas-choix">
+            <option value="recette">Recette</option>
+            <option value="sortie">Sortie / commande</option>
+          </select>
+        </div>
+
+        <div class="form-group">
           <label for="repas-recette">Recette</label>
-          <select id="repas-recette"></select>
+          <div id="repas-recette-wrap">
+            <select id="repas-recette"></select>
+          </div>
+        </div>
+        <div class="form-group" id="repas-sortie-wrap" style="display:none">
+          <label for="repas-sortie">Sortie / commande</label>
+          <select id="repas-sortie"></select>
         </div>
         <div class="form-group">
           <label for="repas-personnes">Nombre de personnes *</label>

@@ -12,8 +12,8 @@ const DAY_NAMES = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", 
 
 let _currentWeekStart = null;   // Date (lundi de la semaine affichée)
 let _weekMeals = [];            // Repas de la semaine chargés depuis l'API
-let _weekSorties = [];          // Sorties / commandes de la semaine
 let _recettesForSelect = [];    // Liste des recettes pour le dropdown
+let _sortiesForSelect = [];     // Sorties/commandes disponibles
 let _editingRepas = null;       // Repas en cours d'édition dans la modale
 
 async function initCalendrier() {
@@ -22,8 +22,8 @@ async function initCalendrier() {
   }
   await Promise.all([
     _loadWeekMeals(),
-    _loadWeekSorties(),
     _loadRecettesForSelect(),
+    _loadSortiesForSelect(),
   ]);
   _renderCalendrier();
   _bindCalendrierEvents();
@@ -43,24 +43,19 @@ async function _loadWeekMeals() {
   }
 }
 
-async function _loadWeekSorties() {
-  try {
-    const debutStr = _dateToISO(_currentWeekStart);
-    const fin = new Date(_currentWeekStart);
-    fin.setDate(fin.getDate() + 6);
-    const finStr = _dateToISO(fin);
-    _weekSorties = await apiGet(`/sorties/?debut=${debutStr}&fin=${finStr}`);
-  } catch (err) {
-    showToast("Erreur chargement sorties : " + err.message, "error");
-    _weekSorties = [];
-  }
-}
-
 async function _loadRecettesForSelect() {
   try {
     _recettesForSelect = await apiGet("/recettes");
   } catch (err) {
     _recettesForSelect = [];
+  }
+}
+
+async function _loadSortiesForSelect() {
+  try {
+    _sortiesForSelect = await apiGet("/sorties/");
+  } catch (err) {
+    _sortiesForSelect = [];
   }
 }
 
@@ -106,21 +101,27 @@ function _renderCalendrier() {
       ${cells}`;
   }).join("");
 
-  const sortieCells = DAY_NAMES.map((_, i) => {
-    const day = new Date(_currentWeekStart);
-    day.setDate(day.getDate() + i);
-    return _renderSortiesCell(day);
-  }).join("");
-
   grid.innerHTML = headerRow + rows;
-  grid.innerHTML += `
-    <div class="cal-row-label">Sorties</div>
-    ${sortieCells}
-  `;
 }
 
 function _renderCell(day, mealType, repas) {
   if (repas) {
+    if (repas.sortie_id) {
+      const label =
+        (repas.sortie_type === "commande" ? "Commande" : "Restaurant") +
+        " : " +
+        (repas.sortie_titre || "Sortie");
+      const montant =
+        repas.sortie_montant !== null && repas.sortie_montant !== undefined
+          ? `${Number(repas.sortie_montant).toFixed(2)} €`
+          : "";
+      return `
+        <div class="cal-cell cal-cell-filled" onclick="openEditRepas('${repas.id}', '${_dateToISO(day)}', '${mealType}')">
+          <span class="cal-meal-name">${_escC(label)}</span>
+          <span class="cal-meal-persons">${montant}</span>
+          <button class="cal-delete-btn" onclick="deleteRepas(event, '${repas.id}')">×</button>
+        </div>`;
+    }
     return `
       <div class="cal-cell cal-cell-filled" onclick="openEditRepas('${repas.id}', '${_dateToISO(day)}', '${mealType}')">
         <span class="cal-meal-name">${_escC(repas.recette_nom || "Repas sans recette")}</span>
@@ -131,30 +132,6 @@ function _renderCell(day, mealType, repas) {
   return `
     <div class="cal-cell cal-cell-empty" onclick="openAddRepas('${_dateToISO(day)}', '${mealType}')">
       <span class="cal-add-hint">+ Ajouter</span>
-    </div>`;
-}
-
-function _renderSortiesCell(day) {
-  const dayStr = _dateToISO(day);
-  const sorties = _weekSorties.filter((s) => s.date === dayStr);
-  if (sorties.length === 0) {
-    return `
-      <div class="cal-cell cal-cell-empty" onclick="openAddSortieWithDate('${dayStr}')">
-        <span class="cal-add-hint">+ Ajouter</span>
-      </div>`;
-  }
-  const items = sorties
-    .map(
-      (s) =>
-        `<div class="cal-sortie-item">
-           <span>${_escC(s.titre)}</span>
-           <small>${Number(s.montant).toFixed(2)} €</small>
-         </div>`
-    )
-    .join("");
-  return `
-    <div class="cal-cell cal-cell-filled" onclick="openAddSortieWithDate('${dayStr}')">
-      <div class="cal-sortie-list">${items}</div>
     </div>`;
 }
 
@@ -172,6 +149,11 @@ function _bindCalendrierEvents() {
 
   const form = document.getElementById("form-repas");
   if (form) form.onsubmit = (e) => submitRepasForm(e);
+
+  const choix = document.getElementById("repas-choix");
+  if (choix) {
+    choix.onchange = () => _toggleRepasType(choix.value);
+  }
 }
 
 async function navigateWeek(delta) {
@@ -181,7 +163,7 @@ async function navigateWeek(delta) {
 }
 
 async function _refreshCalendrier() {
-  await Promise.all([_loadWeekMeals(), _loadWeekSorties()]);
+  await _loadWeekMeals();
   _renderCalendrier();
 }
 
@@ -207,6 +189,17 @@ function _populateRepasModal(dateStr, mealType, repas) {
       )
       .join("");
 
+  // Sélecteur de sorties
+  const sortieSel = document.getElementById("repas-sortie");
+  sortieSel.innerHTML =
+    '<option value="">— Aucune sortie —</option>' +
+    _sortiesForSelect
+      .map(
+        (s) =>
+          `<option value="${s.id}" ${repas?.sortie_id === s.id ? "selected" : ""}>${_escC(s.titre)} · ${_escC(s.date)}</option>`
+      )
+      .join("");
+
   // Nombre de personnes
   document.getElementById("repas-personnes").value =
     repas?.nb_personnes ?? 2;
@@ -214,6 +207,12 @@ function _populateRepasModal(dateStr, mealType, repas) {
   // Données cachées
   document.getElementById("repas-date").value = dateStr;
   document.getElementById("repas-type").value = mealType;
+
+  const typeField = document.getElementById("repas-choix");
+  if (typeField) {
+    typeField.value = repas?.sortie_id ? "sortie" : "recette";
+    _toggleRepasType(typeField.value);
+  }
 }
 
 function openAddRepas(dateStr, mealType) {
@@ -230,11 +229,20 @@ function openEditRepas(repasId, dateStr, mealType) {
 
 async function submitRepasForm(e) {
   e.preventDefault();
-  const recetteId = document.getElementById("repas-recette").value || null;
+  const mode = document.getElementById("repas-choix").value;
+  const recetteId =
+    mode === "recette"
+      ? document.getElementById("repas-recette").value || null
+      : null;
+  const sortieId =
+    mode === "sortie"
+      ? document.getElementById("repas-sortie").value || null
+      : null;
   const data = {
     date: document.getElementById("repas-date").value,
     type_repas: document.getElementById("repas-type").value,
     recette_id: recetteId,
+    sortie_id: sortieId,
     nb_personnes: parseInt(document.getElementById("repas-personnes").value, 10),
   };
   try {
@@ -244,6 +252,18 @@ async function submitRepasForm(e) {
     await _refreshCalendrier();
   } catch (err) {
     showToast("Erreur : " + err.message, "error");
+  }
+}
+
+function _toggleRepasType(mode) {
+  const recetteWrap = document.getElementById("repas-recette-wrap");
+  const sortieWrap = document.getElementById("repas-sortie-wrap");
+  if (mode === "sortie") {
+    if (recetteWrap) recetteWrap.style.display = "none";
+    if (sortieWrap) sortieWrap.style.display = "";
+  } else {
+    if (recetteWrap) recetteWrap.style.display = "";
+    if (sortieWrap) sortieWrap.style.display = "none";
   }
 }
 

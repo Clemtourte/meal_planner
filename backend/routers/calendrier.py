@@ -31,7 +31,7 @@ async def get_semaine(
     result = await _run(
         lambda: (
             db.table("semaine_repas")
-            .select("*, recettes(nom)")
+            .select("*, recettes(nom), sorties(titre, type, montant)")
             .gte("date", str(debut))
             .lte("date", str(fin))
             .eq("user_id", user_id)
@@ -42,14 +42,19 @@ async def get_semaine(
     repas_list = []
     for repas in result.data:
         recette_info = repas.get("recettes") or {}
+        sortie_info = repas.get("sorties") or {}
         repas_list.append(
             {
                 "id": repas["id"],
                 "date": repas["date"],
                 "type_repas": repas["type_repas"],
                 "recette_id": repas["recette_id"],
+                "sortie_id": repas.get("sortie_id"),
                 "nb_personnes": repas["nb_personnes"],
                 "recette_nom": recette_info.get("nom"),
+                "sortie_titre": sortie_info.get("titre"),
+                "sortie_type": sortie_info.get("type"),
+                "sortie_montant": sortie_info.get("montant"),
             }
         )
     return repas_list
@@ -65,11 +70,40 @@ async def create_or_update_repas(
 
     Contrainte unique : date + type_repas + user_id.
     """
+    if repas.recette_id and repas.sortie_id:
+        raise HTTPException(
+            status_code=400, detail="Choisissez une recette ou une sortie, pas les deux"
+        )
+
     data: dict = repas.model_dump()
     data["date"] = str(data["date"])
     data["user_id"] = user_id
     if data.get("recette_id"):
         data["recette_id"] = str(data["recette_id"])
+    if data.get("sortie_id"):
+        data["sortie_id"] = str(data["sortie_id"])
+
+    if data.get("sortie_id"):
+        sortie_result = await _run(
+            lambda: (
+                db.table("sorties")
+                .select("id")
+                .eq("id", data["sortie_id"])
+                .eq("user_id", user_id)
+                .execute()
+            )
+        )
+        if not sortie_result.data:
+            raise HTTPException(status_code=404, detail="Sortie introuvable")
+        await _run(
+            lambda: (
+                db.table("sorties")
+                .update({"date": data["date"]})
+                .eq("id", data["sortie_id"])
+                .eq("user_id", user_id)
+                .execute()
+            )
+        )
 
     result = await _run(
         lambda: (
@@ -94,8 +128,48 @@ async def update_repas(
 ) -> dict:
     """Met à jour un repas planifié (recette, nombre de personnes)."""
     update_data = repas.model_dump(exclude_none=True)
+    if update_data.get("recette_id") and update_data.get("sortie_id"):
+        raise HTTPException(
+            status_code=400, detail="Choisissez une recette ou une sortie, pas les deux"
+        )
     if "recette_id" in update_data and update_data["recette_id"] is not None:
         update_data["recette_id"] = str(update_data["recette_id"])
+    if "sortie_id" in update_data and update_data["sortie_id"] is not None:
+        update_data["sortie_id"] = str(update_data["sortie_id"])
+
+    if update_data.get("sortie_id"):
+        sortie_result = await _run(
+            lambda: (
+                db.table("sorties")
+                .select("id")
+                .eq("id", update_data["sortie_id"])
+                .eq("user_id", user_id)
+                .execute()
+            )
+        )
+        if not sortie_result.data:
+            raise HTTPException(status_code=404, detail="Sortie introuvable")
+    if update_data.get("sortie_id"):
+        repas_result = await _run(
+            lambda: (
+                db.table("semaine_repas")
+                .select("date")
+                .eq("id", str(repas_id))
+                .eq("user_id", user_id)
+                .execute()
+            )
+        )
+        if repas_result.data:
+            await _run(
+                lambda: (
+                    db.table("sorties")
+                    .update({"date": repas_result.data[0]["date"]})
+                    .eq("id", update_data["sortie_id"])
+                    .eq("user_id", user_id)
+                    .execute()
+                )
+            )
+
     result = await _run(
         lambda: (
             db.table("semaine_repas")

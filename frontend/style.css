@@ -939,27 +939,9 @@ input, select, textarea { font-family: inherit; }
 .cal-cell-filled:hover .cal-delete-btn { opacity: 1; }
 .cal-delete-btn:hover { background: var(--color-danger); color: white; }
 
-/* Sorties list inside calendar cells */
-.cal-sortie-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: var(--text-xs);
-}
-
-.cal-sortie-item {
-  background: var(--color-surface-warm);
-  border: 1px dashed var(--color-border-light);
-  border-radius: var(--radius-sm);
-  padding: 6px 8px;
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.cal-sortie-item small {
-  color: var(--color-terracotta-dark);
-  font-weight: 700;
+/* Sorties display inside meal cells */
+.cal-cell .cal-meal-persons {
+  white-space: nowrap;
 }
 
 /* ---------------------------------------------------------------------------
