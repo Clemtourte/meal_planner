@@ -85,6 +85,11 @@ function openAddSortie() {
   showModal("modal-sortie");
 }
 
+function openAddSortieWithDate(dateStr) {
+  openAddSortie();
+  document.getElementById("sortie-date").value = dateStr;
+}
+
 function openEditSortie(id) {
   const s = _sorties.find((x) => x.id === id);
   if (!s) return;

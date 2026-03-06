@@ -7,6 +7,7 @@ let _historique = [];
 let _currentWeekDebutStr = null;
 let _currentWeekCout = null;
 let _currentWeekMagasin = null;
+let _currentWeekSorties = 0;
 
 async function initBudget() {
   await _loadBudgets();
@@ -89,6 +90,12 @@ function _bindBudgetForm() {
   });
 }
 
+function _addDaysISO(dateStr, days) {
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split("T")[0];
+}
+
 // ---------------------------------------------------------------------------
 // Semaine en cours
 // ---------------------------------------------------------------------------
@@ -102,35 +109,45 @@ async function _renderSemaineCourante() {
   const diff = day === 0 ? -6 : 1 - day;
   today.setDate(today.getDate() + diff);
   const debutStr = today.toISOString().split("T")[0];
+  const finStr = _addDaysISO(debutStr, 6);
 
   const budgetHebdo = _budgets.hebdomadaire
     ? Number(_budgets.hebdomadaire.montant)
     : null;
 
   try {
-    const data = await apiGet(`/courses/?debut=${debutStr}`);
+    const [data, sorties] = await Promise.all([
+      apiGet(`/courses/?debut=${debutStr}`),
+      apiGet(`/sorties/?debut=${debutStr}&fin=${finStr}`),
+    ]);
     const cout = data.cout_total_estime;
+    const sortiesTotal = sorties.reduce(
+      (sum, s) => sum + Number(s.montant || 0),
+      0
+    );
 
     // Mémoriser pour le bouton Valider
     _currentWeekDebutStr = debutStr;
     _currentWeekCout = cout;
+    _currentWeekSorties = sortiesTotal;
     const magasins = Object.entries(data.cout_par_magasin || {});
     _currentWeekMagasin =
       magasins.length > 0
         ? magasins.sort(([, a], [, b]) => b - a)[0][0]
         : null;
 
-    if (cout === null) {
+    if (cout === null && sortiesTotal === 0) {
       section.innerHTML =
         '<p class="empty-state">Aucun coût estimé pour la semaine en cours (aucun prix renseigné).</p>';
       return;
     }
 
+    const totalSemaine = (cout ?? 0) + sortiesTotal;
     const pct =
       budgetHebdo !== null
-        ? Math.min(100, Math.round((cout / budgetHebdo) * 100))
+        ? Math.min(100, Math.round((totalSemaine / budgetHebdo) * 100))
         : null;
-    const restant = budgetHebdo !== null ? budgetHebdo - cout : null;
+    const restant = budgetHebdo !== null ? budgetHebdo - totalSemaine : null;
     const barClass =
       pct === null ? "ok" : pct >= 100 ? "danger" : pct >= 80 ? "warning" : "ok";
 
@@ -160,8 +177,16 @@ async function _renderSemaineCourante() {
     section.innerHTML = `
       <div class="budget-kpi-grid">
         <div class="budget-kpi">
-          <span class="budget-kpi-label">Coût estimé</span>
-          <span class="budget-kpi-value">${cout.toFixed(2)} €</span>
+          <span class="budget-kpi-label">Recettes (estimé)</span>
+          <span class="budget-kpi-value">${(cout ?? 0).toFixed(2)} €</span>
+        </div>
+        <div class="budget-kpi">
+          <span class="budget-kpi-label">Sorties & commandes</span>
+          <span class="budget-kpi-value">${sortiesTotal.toFixed(2)} €</span>
+        </div>
+        <div class="budget-kpi">
+          <span class="budget-kpi-label">Total semaine</span>
+          <span class="budget-kpi-value">${totalSemaine.toFixed(2)} €</span>
         </div>
         ${kpiHebdo}
       </div>
@@ -179,11 +204,12 @@ async function _renderSemaineCourante() {
 }
 
 async function _validateSemaineBudget() {
-  if (_currentWeekCout === null || !_currentWeekDebutStr) return;
+  if (_currentWeekCout === null && _currentWeekSorties === 0) return;
+  if (!_currentWeekDebutStr) return;
   try {
     await apiPost("/budgets/historique", {
       semaine_debut: _currentWeekDebutStr,
-      montant_estime: _currentWeekCout,
+      montant_estime: (_currentWeekCout ?? 0) + _currentWeekSorties,
       magasin_choisi: _currentWeekMagasin,
     });
     showToast("Dépense enregistrée dans l'historique ✓");

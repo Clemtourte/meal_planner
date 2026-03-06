@@ -197,15 +197,27 @@ async function validateCourses() {
       : null;
 
   try {
+    const finStr = _coursesDateToISO(_addDays(new Date(debutStr + "T00:00:00"), 6));
+    const sorties = await apiGet(`/sorties/?debut=${debutStr}&fin=${finStr}`);
+    const sortiesTotal = sorties.reduce(
+      (sum, s) => sum + Number(s.montant || 0),
+      0
+    );
     await apiPost("/budgets/historique", {
       semaine_debut: debutStr,
-      montant_estime: data.cout_total_estime,
+      montant_estime: (data.cout_total_estime ?? 0) + sortiesTotal,
       magasin_choisi: magasinChoisi,
     });
     showToast("Dépense enregistrée dans l'historique ✓");
   } catch (err) {
     showToast("Erreur : " + err.message, "error");
   }
+}
+
+function _addDays(date, days) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
 }
 
 async function exportPdf() {

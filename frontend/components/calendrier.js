@@ -12,6 +12,7 @@ const DAY_NAMES = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", 
 
 let _currentWeekStart = null;   // Date (lundi de la semaine affichée)
 let _weekMeals = [];            // Repas de la semaine chargés depuis l'API
+let _weekSorties = [];          // Sorties / commandes de la semaine
 let _recettesForSelect = [];    // Liste des recettes pour le dropdown
 let _editingRepas = null;       // Repas en cours d'édition dans la modale
 
@@ -19,7 +20,11 @@ async function initCalendrier() {
   if (!_currentWeekStart) {
     _currentWeekStart = _getMondayOf(new Date());
   }
-  await Promise.all([_loadWeekMeals(), _loadRecettesForSelect()]);
+  await Promise.all([
+    _loadWeekMeals(),
+    _loadWeekSorties(),
+    _loadRecettesForSelect(),
+  ]);
   _renderCalendrier();
   _bindCalendrierEvents();
 }
@@ -35,6 +40,19 @@ async function _loadWeekMeals() {
   } catch (err) {
     showToast("Erreur chargement calendrier : " + err.message, "error");
     _weekMeals = [];
+  }
+}
+
+async function _loadWeekSorties() {
+  try {
+    const debutStr = _dateToISO(_currentWeekStart);
+    const fin = new Date(_currentWeekStart);
+    fin.setDate(fin.getDate() + 6);
+    const finStr = _dateToISO(fin);
+    _weekSorties = await apiGet(`/sorties/?debut=${debutStr}&fin=${finStr}`);
+  } catch (err) {
+    showToast("Erreur chargement sorties : " + err.message, "error");
+    _weekSorties = [];
   }
 }
 
@@ -88,7 +106,17 @@ function _renderCalendrier() {
       ${cells}`;
   }).join("");
 
+  const sortieCells = DAY_NAMES.map((_, i) => {
+    const day = new Date(_currentWeekStart);
+    day.setDate(day.getDate() + i);
+    return _renderSortiesCell(day);
+  }).join("");
+
   grid.innerHTML = headerRow + rows;
+  grid.innerHTML += `
+    <div class="cal-row-label">Sorties</div>
+    ${sortieCells}
+  `;
 }
 
 function _renderCell(day, mealType, repas) {
@@ -103,6 +131,30 @@ function _renderCell(day, mealType, repas) {
   return `
     <div class="cal-cell cal-cell-empty" onclick="openAddRepas('${_dateToISO(day)}', '${mealType}')">
       <span class="cal-add-hint">+ Ajouter</span>
+    </div>`;
+}
+
+function _renderSortiesCell(day) {
+  const dayStr = _dateToISO(day);
+  const sorties = _weekSorties.filter((s) => s.date === dayStr);
+  if (sorties.length === 0) {
+    return `
+      <div class="cal-cell cal-cell-empty" onclick="openAddSortieWithDate('${dayStr}')">
+        <span class="cal-add-hint">+ Ajouter</span>
+      </div>`;
+  }
+  const items = sorties
+    .map(
+      (s) =>
+        `<div class="cal-sortie-item">
+           <span>${_escC(s.titre)}</span>
+           <small>${Number(s.montant).toFixed(2)} €</small>
+         </div>`
+    )
+    .join("");
+  return `
+    <div class="cal-cell cal-cell-filled" onclick="openAddSortieWithDate('${dayStr}')">
+      <div class="cal-sortie-list">${items}</div>
     </div>`;
 }
 
@@ -129,7 +181,7 @@ async function navigateWeek(delta) {
 }
 
 async function _refreshCalendrier() {
-  await _loadWeekMeals();
+  await Promise.all([_loadWeekMeals(), _loadWeekSorties()]);
   _renderCalendrier();
 }
 

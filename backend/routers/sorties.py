@@ -1,6 +1,7 @@
 """Router FastAPI pour les sorties resto et commandes."""
 
 import asyncio
+from datetime import date
 from typing import Any
 from uuid import UUID
 
@@ -21,19 +22,18 @@ async def _run(fn: Any) -> Any:
 
 @router.get("/", response_model=list[SortieResponse])
 async def list_sorties(
+    debut: date | None = None,
+    fin: date | None = None,
     db: Client = Depends(get_supabase),
     user_id: str = Depends(get_user_id),
 ) -> list[dict]:
     """Retourne toutes les sorties, triées par date (desc)."""
-    result = await _run(
-        lambda: (
-            db.table("sorties")
-            .select("*")
-            .eq("user_id", user_id)
-            .order("date", desc=True)
-            .execute()
-        )
-    )
+    query = db.table("sorties").select("*").eq("user_id", user_id)
+    if debut is not None:
+        query = query.gte("date", str(debut))
+    if fin is not None:
+        query = query.lte("date", str(fin))
+    result = await _run(lambda: query.order("date", desc=True).execute())
     return result.data
 
 
