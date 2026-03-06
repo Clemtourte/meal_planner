@@ -38,15 +38,21 @@ def _mock_recettes_db() -> MagicMock:
         tbl = MagicMock()
         if table_name == "recettes":
             tbl.insert.return_value.execute.return_value = recette_result
-            tbl.select.return_value.eq.return_value.execute.return_value = (
-                recette_result
-            )
-            (
-                tbl.select.return_value.eq.return_value.order.return_value.execute.return_value
-            ) = recette_result
+            select_chain = tbl.select.return_value
+            select_chain.eq.return_value = select_chain
+            select_chain.execute.return_value = recette_result
+            select_chain.order.return_value.execute.return_value = recette_result
         elif table_name == "recette_ingredients":
-            tbl.select.return_value.eq.return_value.execute.return_value = ri_result
+            select_chain = tbl.select.return_value
+            select_chain.eq.return_value = select_chain
+            select_chain.execute.return_value = ri_result
             tbl.insert.return_value.execute.return_value = MagicMock(data=[])
+        elif table_name == "ingredients":
+            select_chain = tbl.select.return_value
+            select_chain.eq.return_value = select_chain
+            select_chain.in_.return_value.eq.return_value.execute.return_value = (
+                MagicMock(data=[])
+            )
         return tbl
 
     mock.table.side_effect = table_fn
@@ -112,9 +118,9 @@ def test_delete_recette_fk_409(client: TestClient) -> None:
         raise Exception("violates foreign key constraint")
 
     mock = MagicMock()
-    mock.table.return_value.delete.return_value.eq.return_value.execute.side_effect = (
-        _raise_fk
-    )
+    chain = mock.table.return_value.delete.return_value
+    chain.eq.return_value = chain
+    chain.execute.side_effect = _raise_fk
 
     app.dependency_overrides[get_supabase] = lambda: mock
     try:
@@ -132,9 +138,9 @@ def test_delete_ingredient_fk_409(client: TestClient) -> None:
         raise Exception("violates foreign key constraint (23503)")
 
     mock = MagicMock()
-    mock.table.return_value.delete.return_value.eq.return_value.execute.side_effect = (
-        _raise_fk
-    )
+    chain = mock.table.return_value.delete.return_value
+    chain.eq.return_value = chain
+    chain.execute.side_effect = _raise_fk
 
     app.dependency_overrides[get_supabase] = lambda: mock
     try:

@@ -51,6 +51,7 @@ def _mock_budget_select(data: list) -> MagicMock:
     result = MagicMock()
     result.data = data
     chain = mock.table.return_value.select.return_value
+    chain.eq.return_value = chain
     chain.order.return_value.execute.return_value = result
     return mock
 
@@ -79,9 +80,9 @@ def test_update_budget(client: TestClient) -> None:
     mock = MagicMock()
     result = MagicMock()
     result.data = [updated]
-    (
-        mock.table.return_value.update.return_value.eq.return_value.execute.return_value
-    ) = result
+    chain = mock.table.return_value.update.return_value
+    chain.eq.return_value = chain
+    chain.execute.return_value = result
     app.dependency_overrides[get_supabase] = lambda: mock
     try:
         response = client.patch(
@@ -146,9 +147,9 @@ def test_delete_historique(client: TestClient) -> None:
     mock = MagicMock()
     result = MagicMock()
     result.data = []
-    (
-        mock.table.return_value.delete.return_value.eq.return_value.execute.return_value
-    ) = result
+    chain = mock.table.return_value.delete.return_value
+    chain.eq.return_value = chain
+    chain.execute.return_value = result
     app.dependency_overrides[get_supabase] = lambda: mock
     try:
         response = client.delete(f"/api/budgets/historique/{_HISTORIQUE_ID}")

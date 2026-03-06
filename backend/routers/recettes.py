@@ -233,7 +233,11 @@ async def get_recette_cout(
     ingredient_ids = [ri["ingredient_id"] for ri in ri_result.data]
     prix_result = await _run(
         lambda: (
-            db.table("prix").select("*").in_("ingredient_id", ingredient_ids).execute()
+            db.table("prix")
+            .select("*")
+            .in_("ingredient_id", ingredient_ids)
+            .eq("user_id", user_id)
+            .execute()
         )
     )
     prix_by_ingredient: dict[str, list] = {}
@@ -457,6 +461,7 @@ async def update_ingredient_in_recette(
             db.table("ingredients")
             .select("nom")
             .eq("id", row["ingredient_id"])
+            .eq("user_id", user_id)
             .execute()
         )
     )

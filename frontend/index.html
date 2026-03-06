@@ -108,6 +108,16 @@
       </svg>
       Courses
     </button>
+    <button class="tab-btn" data-tab="sorties" role="tab" aria-selected="false">
+      <!-- SVG : store -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 9l1-7h16l1 7"/>
+        <path d="M5 22V10h14v12"/>
+        <path d="M9 22V14h6v8"/>
+      </svg>
+      Sorties
+    </button>
     <button class="tab-btn" data-tab="budget" role="tab" aria-selected="false">
       <!-- SVG : dollar sign / budget -->
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -222,6 +232,19 @@
       <div id="budget-historique-content">
         <p class="loading-text">Chargement…</p>
       </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       ONGLET — SORTIES / COMMANDES
+       ================================================================ -->
+  <section id="tab-sorties" class="tab-content" role="tabpanel">
+    <div class="section-header">
+      <h2>Sorties &amp; commandes</h2>
+      <button id="btn-add-sortie" class="btn btn-primary">+ Ajouter</button>
+    </div>
+    <div id="sorties-container">
+      <p class="loading-text">Chargement…</p>
     </div>
   </section>
 
@@ -398,6 +421,47 @@
     </div>
   </div>
 
+  <!-- Modale : Sortie / commande -->
+  <div id="modal-sortie" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-sortie-title">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-sortie-title">Sortie</h2>
+        <button class="modal-close" onclick="hideModal('modal-sortie')" aria-label="Fermer">×</button>
+      </div>
+      <form id="form-sortie">
+        <div class="form-group-row">
+          <div class="form-group">
+            <label for="sortie-date">Date *</label>
+            <input id="sortie-date" type="date" required />
+          </div>
+          <div class="form-group">
+            <label for="sortie-type">Type *</label>
+            <select id="sortie-type" required>
+              <option value="restaurant">Restaurant</option>
+              <option value="commande">Commande</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="sortie-titre">Titre *</label>
+          <input id="sortie-titre" type="text" placeholder="ex : Sushi Express, Burger King…" required />
+        </div>
+        <div class="form-group">
+          <label for="sortie-montant">Montant (€) *</label>
+          <input id="sortie-montant" type="number" step="0.01" min="0" placeholder="ex : 24.90" required />
+        </div>
+        <div class="form-group">
+          <label for="sortie-notes">Notes (optionnel)</label>
+          <textarea id="sortie-notes" rows="2" placeholder="Infos utiles, participants, etc."></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="hideModal('modal-sortie')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Conteneur de toasts -->
   <div id="toast-container" role="region" aria-live="polite"></div>
 
@@ -417,5 +481,6 @@
   <script src="components/calendrier.js"></script>
   <script src="components/courses.js"></script>
   <script src="components/budget.js"></script>
+  <script src="components/sorties.js"></script>
 </body>
 </html>

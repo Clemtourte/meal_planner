@@ -386,6 +386,59 @@ input, select, textarea { font-family: inherit; }
 }
 
 /* ---------------------------------------------------------------------------
+   Sorties / commandes
+   --------------------------------------------------------------------------- */
+.sortie-card {
+  border-left: 3px solid var(--color-primary-light);
+}
+
+.sortie-title {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  letter-spacing: -0.2px;
+}
+
+.sortie-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-xs);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.sortie-montant {
+  font-weight: 700;
+  color: var(--color-terracotta-dark);
+}
+
+.sortie-notes {
+  margin-top: var(--space-xs);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.badge-sortie {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-accent);
+  color: var(--color-primary-dark);
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  padding: 2px 10px;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+}
+
+.badge-sortie--cmd {
+  background: var(--color-terracotta-light);
+  color: var(--color-terracotta-dark);
+}
+
+/* ---------------------------------------------------------------------------
    Ingredient cards
    --------------------------------------------------------------------------- */
 .category-group { margin-bottom: var(--space-xl); }

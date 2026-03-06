@@ -6,7 +6,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers import budget, calendrier, courses, ingredients, recettes
+from backend.routers import budget, calendrier, courses, ingredients, recettes, sorties
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +34,7 @@ app.include_router(recettes.router, prefix="/api/recettes", tags=["recettes"])
 app.include_router(calendrier.router, prefix="/api/calendrier", tags=["calendrier"])
 app.include_router(courses.router, prefix="/api/courses", tags=["courses"])
 app.include_router(budget.router, prefix="/api/budgets", tags=["budget"])
+app.include_router(sorties.router, prefix="/api/sorties", tags=["sorties"])
 
 
 @app.get("/api/health")

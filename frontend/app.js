@@ -184,6 +184,9 @@ function switchTab(tabName) {
     case "budget":
       initBudget();
       break;
+    case "sorties":
+      initSorties();
+      break;
   }
 }
 

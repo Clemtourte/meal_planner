@@ -189,6 +189,10 @@ meal_planner/
 - Estimation du coût avec le magasin le moins cher
 - **Export PDF** via reportlab
 
+### Sorties & commandes
+- Suivi des repas hors recettes (restaurant, commandes)
+- Montant, date, notes
+
 ---
 
 ## API — Endpoints principaux
@@ -214,6 +218,10 @@ meal_planner/
 | GET | `/api/budgets/historique` | Historique des dépenses |
 | POST | `/api/budgets/historique` | Enregistrer une dépense |
 | GET | `/api/recettes/{id}/cout` | Coût estimé d'une recette |
+| GET | `/api/sorties` | Liste des sorties/commandes |
+| POST | `/api/sorties` | Créer une sortie/commande |
+| PATCH | `/api/sorties/{id}` | Modifier une sortie/commande |
+| DELETE | `/api/sorties/{id}` | Supprimer une sortie/commande |
 
 ---
 
@@ -233,6 +241,7 @@ sur les données via l'API.
   les données par `user_id`
 
 **Migrations requises :** exécuter `migrations/005_multiuser.sql`,
-`migrations/010_courses_checks_user_id.sql` et
-`migrations/011_ingredients_prix_user_id.sql` dans Supabase
+`migrations/010_courses_checks_user_id.sql`,
+`migrations/011_ingredients_prix_user_id.sql` et
+`migrations/012_sorties.sql` dans Supabase
 pour ajouter la colonne `user_id` aux tables concernées.

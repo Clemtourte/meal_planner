@@ -32,6 +32,7 @@ def _mock_select_order(data: list) -> MagicMock:
     result = MagicMock()
     result.data = data
     chain = mock.table.return_value.select.return_value
+    chain.eq.return_value = chain
     chain.order.return_value.execute.return_value = result
     return mock
 
