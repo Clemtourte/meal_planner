@@ -39,11 +39,17 @@ async def _run(fn: Any) -> Any:
 @router.get("/", response_model=list[IngredientResponse])
 async def list_ingredients(
     db: Client = Depends(get_supabase),
-    _user_id: str = Depends(get_user_id),
+    user_id: str = Depends(get_user_id),
 ) -> list[dict]:
     """Retourne tous les ingrédients triés par nom."""
     result = await _run(
-        lambda: db.table("ingredients").select("*").order("nom").execute()
+        lambda: (
+            db.table("ingredients")
+            .select("*")
+            .eq("user_id", user_id)
+            .order("nom")
+            .execute()
+        )
     )
     return result.data
 
@@ -52,12 +58,12 @@ async def list_ingredients(
 async def create_ingredient(
     ingredient: IngredientCreate,
     db: Client = Depends(get_supabase),
-    _user_id: str = Depends(get_user_id),
+    user_id: str = Depends(get_user_id),
 ) -> dict:
     """Crée un nouvel ingrédient."""
-    result = await _run(
-        lambda: db.table("ingredients").insert(ingredient.model_dump()).execute()
-    )
+    data = ingredient.model_dump()
+    data["user_id"] = user_id
+    result = await _run(lambda: db.table("ingredients").insert(data).execute())
     if not result.data:
         raise HTTPException(
             status_code=400, detail="Échec de la création de l'ingrédient"
@@ -69,12 +75,16 @@ async def create_ingredient(
 async def get_ingredient(
     ingredient_id: UUID,
     db: Client = Depends(get_supabase),
-    _user_id: str = Depends(get_user_id),
+    user_id: str = Depends(get_user_id),
 ) -> dict:
     """Retourne un ingrédient par son identifiant."""
     result = await _run(
         lambda: (
-            db.table("ingredients").select("*").eq("id", str(ingredient_id)).execute()
+            db.table("ingredients")
+            .select("*")
+            .eq("id", str(ingredient_id))
+            .eq("user_id", user_id)
+            .execute()
         )
     )
     if not result.data:
@@ -87,7 +97,7 @@ async def update_ingredient(
     ingredient_id: UUID,
     ingredient: IngredientUpdate,
     db: Client = Depends(get_supabase),
-    _user_id: str = Depends(get_user_id),
+    user_id: str = Depends(get_user_id),
 ) -> dict:
     """Met à jour les champs d'un ingrédient."""
     update_data = ingredient.model_dump(exclude_none=True)
@@ -98,6 +108,7 @@ async def update_ingredient(
             db.table("ingredients")
             .update(update_data)
             .eq("id", str(ingredient_id))
+            .eq("user_id", user_id)
             .execute()
         )
     )
@@ -110,7 +121,7 @@ async def update_ingredient(
 async def delete_ingredient(
     ingredient_id: UUID,
     db: Client = Depends(get_supabase),
-    _user_id: str = Depends(get_user_id),
+    user_id: str = Depends(get_user_id),
 ) -> None:
     """Supprime un ingrédient et ses prix associés (cascade).
 
@@ -119,7 +130,11 @@ async def delete_ingredient(
     try:
         await _run(
             lambda: (
-                db.table("ingredients").delete().eq("id", str(ingredient_id)).execute()
+                db.table("ingredients")
+                .delete()
+                .eq("id", str(ingredient_id))
+                .eq("user_id", user_id)
+                .execute()
             )
         )
     except Exception as exc:
@@ -147,7 +162,7 @@ async def delete_ingredient(
 async def list_prix(
     ingredient_id: UUID,
     db: Client = Depends(get_supabase),
-    _user_id: str = Depends(get_user_id),
+    user_id: str = Depends(get_user_id),
 ) -> list[dict]:
     """Retourne tous les prix d'un ingrédient, triés par magasin."""
     result = await _run(
@@ -155,6 +170,7 @@ async def list_prix(
             db.table("prix")
             .select("*")
             .eq("ingredient_id", str(ingredient_id))
+            .eq("user_id", user_id)
             .order("magasin")
             .execute()
         )
@@ -167,11 +183,12 @@ async def add_prix(
     ingredient_id: UUID,
     prix: PrixCreate,
     db: Client = Depends(get_supabase),
-    _user_id: str = Depends(get_user_id),
+    user_id: str = Depends(get_user_id),
 ) -> dict:
     """Ajoute un prix pour un ingrédient dans un magasin."""
     data = prix.model_dump()
     data["ingredient_id"] = str(ingredient_id)
+    data["user_id"] = user_id
     result = await _run(lambda: db.table("prix").insert(data).execute())
     if not result.data:
         raise HTTPException(status_code=400, detail="Échec de l'ajout du prix")
@@ -184,7 +201,7 @@ async def update_prix(
     prix_id: UUID,
     prix: PrixUpdate,
     db: Client = Depends(get_supabase),
-    _user_id: str = Depends(get_user_id),
+    user_id: str = Depends(get_user_id),
 ) -> dict:
     """Met à jour les champs d'un prix."""
     update_data = prix.model_dump(exclude_none=True)
@@ -196,6 +213,7 @@ async def update_prix(
             .update(update_data)
             .eq("id", str(prix_id))
             .eq("ingredient_id", str(ingredient_id))
+            .eq("user_id", user_id)
             .execute()
         )
     )
@@ -209,7 +227,7 @@ async def delete_prix(
     ingredient_id: UUID,
     prix_id: UUID,
     db: Client = Depends(get_supabase),
-    _user_id: str = Depends(get_user_id),
+    user_id: str = Depends(get_user_id),
 ) -> None:
     """Supprime un prix."""
     await _run(
@@ -218,6 +236,7 @@ async def delete_prix(
             .delete()
             .eq("id", str(prix_id))
             .eq("ingredient_id", str(ingredient_id))
+            .eq("user_id", user_id)
             .execute()
         )
     )

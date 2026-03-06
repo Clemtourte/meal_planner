@@ -31,10 +31,16 @@ async def _run(fn: Any) -> Any:
     return await asyncio.to_thread(fn)
 
 
-async def _get_recette_detail(recette_id: str, db: Client) -> dict:
+async def _get_recette_detail(recette_id: str, db: Client, user_id: str) -> dict:
     """Charge une recette avec ses ingrédients (jointure PostgREST)."""
     result = await _run(
-        lambda: db.table("recettes").select("*").eq("id", recette_id).execute()
+        lambda: (
+            db.table("recettes")
+            .select("*")
+            .eq("id", recette_id)
+            .eq("user_id", user_id)
+            .execute()
+        )
     )
     if not result.data:
         raise HTTPException(status_code=404, detail="Recette introuvable")
@@ -72,11 +78,17 @@ async def _get_recette_detail(recette_id: str, db: Client) -> dict:
 @router.get("/", response_model=list[RecetteResponse])
 async def list_recettes(
     db: Client = Depends(get_supabase),
-    _user_id: str = Depends(get_user_id),
+    user_id: str = Depends(get_user_id),
 ) -> list[dict]:
     """Retourne toutes les recettes, triées par nom."""
     result = await _run(
-        lambda: (db.table("recettes").select("*").order("nom").execute())
+        lambda: (
+            db.table("recettes")
+            .select("*")
+            .eq("user_id", user_id)
+            .order("nom")
+            .execute()
+        )
     )
     return result.data
 
@@ -125,6 +137,24 @@ async def create_recette_with_ingredients(
     recette_id = result.data[0]["id"]
 
     try:
+        if payload.ingredients:
+            ingredient_ids = [str(ing.ingredient_id) for ing in payload.ingredients]
+            ing_check = await _run(
+                lambda: (
+                    db.table("ingredients")
+                    .select("id")
+                    .in_("id", ingredient_ids)
+                    .eq("user_id", user_id)
+                    .execute()
+                )
+            )
+            found_ids = {row["id"] for row in ing_check.data}
+            missing = [i for i in ingredient_ids if i not in found_ids]
+            if missing:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Certains ingrédients sont introuvables",
+                )
         for ing in payload.ingredients:
             ri_data = ing.model_dump()
             ri_data["recette_id"] = recette_id
@@ -140,18 +170,35 @@ async def create_recette_with_ingredients(
             detail=f"Erreur lors de l'ajout des ingrédients : {exc}",
         ) from exc
 
-    return await _get_recette_detail(recette_id, db)
+    return await _get_recette_detail(recette_id, db, user_id)
 
 
 @router.get("/{recette_id}", response_model=RecetteDetailResponse)
-async def get_recette(recette_id: UUID, db: Client = Depends(get_supabase)) -> dict:
+async def get_recette(
+    recette_id: UUID,
+    db: Client = Depends(get_supabase),
+    user_id: str = Depends(get_user_id),
+) -> dict:
     """Retourne une recette avec la liste de ses ingrédients."""
-    return await _get_recette_detail(str(recette_id), db)
+    result = await _run(
+        lambda: (
+            db.table("recettes")
+            .select("*")
+            .eq("id", str(recette_id))
+            .eq("user_id", user_id)
+            .execute()
+        )
+    )
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Recette introuvable")
+    return await _get_recette_detail(str(recette_id), db, user_id)
 
 
 @router.get("/{recette_id}/cout", response_model=RecetteCoutResponse)
 async def get_recette_cout(
-    recette_id: UUID, db: Client = Depends(get_supabase)
+    recette_id: UUID,
+    db: Client = Depends(get_supabase),
+    user_id: str = Depends(get_user_id),
 ) -> dict:
     """
     Calcule le coût estimé d'une recette.
@@ -161,7 +208,13 @@ async def get_recette_cout(
     le coût par portion et le détail par ingrédient.
     """
     recette_result = await _run(
-        lambda: db.table("recettes").select("*").eq("id", str(recette_id)).execute()
+        lambda: (
+            db.table("recettes")
+            .select("*")
+            .eq("id", str(recette_id))
+            .eq("user_id", user_id)
+            .execute()
+        )
     )
     if not recette_result.data:
         raise HTTPException(status_code=404, detail="Recette introuvable")
@@ -254,6 +307,7 @@ async def update_recette(
     recette_id: UUID,
     recette: RecetteUpdate,
     db: Client = Depends(get_supabase),
+    user_id: str = Depends(get_user_id),
 ) -> dict:
     """Met à jour les champs d'une recette."""
     update_data = recette.model_dump(exclude_none=True)
@@ -261,7 +315,11 @@ async def update_recette(
         raise HTTPException(status_code=400, detail="Aucune donnée à mettre à jour")
     result = await _run(
         lambda: (
-            db.table("recettes").update(update_data).eq("id", str(recette_id)).execute()
+            db.table("recettes")
+            .update(update_data)
+            .eq("id", str(recette_id))
+            .eq("user_id", user_id)
+            .execute()
         )
     )
     if not result.data:
@@ -270,14 +328,24 @@ async def update_recette(
 
 
 @router.delete("/{recette_id}", status_code=204)
-async def delete_recette(recette_id: UUID, db: Client = Depends(get_supabase)) -> None:
+async def delete_recette(
+    recette_id: UUID,
+    db: Client = Depends(get_supabase),
+    user_id: str = Depends(get_user_id),
+) -> None:
     """Supprime une recette et ses associations d'ingrédients (cascade).
 
     Retourne 409 si la recette est encore référencée dans le calendrier.
     """
     try:
         await _run(
-            lambda: db.table("recettes").delete().eq("id", str(recette_id)).execute()
+            lambda: (
+                db.table("recettes")
+                .delete()
+                .eq("id", str(recette_id))
+                .eq("user_id", user_id)
+                .execute()
+            )
         )
     except Exception as exc:
         exc_str = str(exc).lower()
@@ -309,8 +377,31 @@ async def add_ingredient_to_recette(
     recette_id: UUID,
     ri: RecetteIngredientCreate,
     db: Client = Depends(get_supabase),
+    user_id: str = Depends(get_user_id),
 ) -> dict:
     """Ajoute un ingrédient (avec quantité et unité) à une recette."""
+    recette_result = await _run(
+        lambda: (
+            db.table("recettes")
+            .select("id")
+            .eq("id", str(recette_id))
+            .eq("user_id", user_id)
+            .execute()
+        )
+    )
+    if not recette_result.data:
+        raise HTTPException(status_code=404, detail="Recette introuvable")
+    ing_result = await _run(
+        lambda: (
+            db.table("ingredients")
+            .select("id")
+            .eq("id", str(ri.ingredient_id))
+            .eq("user_id", user_id)
+            .execute()
+        )
+    )
+    if not ing_result.data:
+        raise HTTPException(status_code=404, detail="Ingrédient introuvable")
     data = ri.model_dump()
     data["recette_id"] = str(recette_id)
     data["ingredient_id"] = str(data["ingredient_id"])
@@ -331,8 +422,20 @@ async def update_ingredient_in_recette(
     ri_id: UUID,
     ri: RecetteIngredientUpdate,
     db: Client = Depends(get_supabase),
+    user_id: str = Depends(get_user_id),
 ) -> dict:
     """Met à jour la quantité et/ou l'unité d'un ingrédient dans une recette."""
+    recette_result = await _run(
+        lambda: (
+            db.table("recettes")
+            .select("id")
+            .eq("id", str(recette_id))
+            .eq("user_id", user_id)
+            .execute()
+        )
+    )
+    if not recette_result.data:
+        raise HTTPException(status_code=404, detail="Recette introuvable")
     update_data = ri.model_dump(exclude_none=True)
     if not update_data:
         raise HTTPException(status_code=400, detail="Aucune donnée à mettre à jour")
@@ -363,9 +466,23 @@ async def update_ingredient_in_recette(
 
 @router.delete("/{recette_id}/ingredients/{ri_id}", status_code=204)
 async def remove_ingredient_from_recette(
-    recette_id: UUID, ri_id: UUID, db: Client = Depends(get_supabase)
+    recette_id: UUID,
+    ri_id: UUID,
+    db: Client = Depends(get_supabase),
+    user_id: str = Depends(get_user_id),
 ) -> None:
     """Retire un ingrédient d'une recette."""
+    recette_result = await _run(
+        lambda: (
+            db.table("recettes")
+            .select("id")
+            .eq("id", str(recette_id))
+            .eq("user_id", user_id)
+            .execute()
+        )
+    )
+    if not recette_result.data:
+        raise HTTPException(status_code=404, detail="Recette introuvable")
     await _run(
         lambda: (
             db.table("recette_ingredients")

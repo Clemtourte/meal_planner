@@ -48,9 +48,13 @@ Créer un fichier `.env` à la racine du projet :
 ```env
 SUPABASE_URL=https://xxxxxxxxxxxxxxxxxxxx.supabase.co
 SUPABASE_KEY=your_supabase_anon_key_here
+SUPABASE_SERVICE_KEY=your_supabase_service_role_key_here
+ALLOWED_ORIGINS=http://localhost:5500
 ```
 
 Retrouvez ces valeurs dans votre dashboard Supabase → **Project Settings → API**.
+La `SUPABASE_SERVICE_KEY` est recommandée : le backend l'utilise pour accéder
+aux données tout en appliquant l'isolation multi-utilisateurs via `user_id`.
 
 ---
 
@@ -215,16 +219,20 @@ meal_planner/
 
 ## Multi-utilisateurs
 
-L'architecture supporte plusieurs utilisateurs via le header `X-User-ID`.
-L'authentification complète sera activée lors du déploiement avec
-Supabase Auth Row Level Security.
+L'architecture supporte plusieurs utilisateurs via Supabase Auth (JWT),
+et **l'isolation est assurée côté backend** par le filtrage `user_id`.
+La `SUPABASE_SERVICE_KEY` est utilisée pour accéder à la base (bypass RLS),
+ce qui évite les blocages liés à RLS tout en gardant un contrôle strict
+sur les données via l'API.
 
 **Fonctionnement actuel :**
-- Chaque requête peut transmettre un identifiant utilisateur : `X-User-ID: user123`
-- Si le header est absent, l'identifiant `default_user` est utilisé automatiquement
-- Les tables `recettes`, `semaine_repas`, `budgets` et `historique_depenses`
-  filtrent et taguent les données par `user_id`
-- Le frontend actuel fonctionne sans modification (`default_user` par défaut)
+- Chaque requête doit inclure un JWT Supabase (`Authorization: Bearer ...`)
+- Le backend dérive `user_id` depuis le JWT
+- Les tables `ingredients`, `recettes`, `semaine_repas`, `budgets`,
+  `historique_depenses`, `prix`, `courses_checks` filtrent et taguent
+  les données par `user_id`
 
-**Migration requise :** exécuter `migrations/005_multiuser.sql` dans Supabase
+**Migrations requises :** exécuter `migrations/005_multiuser.sql`,
+`migrations/010_courses_checks_user_id.sql` et
+`migrations/011_ingredients_prix_user_id.sql` dans Supabase
 pour ajouter la colonne `user_id` aux tables concernées.

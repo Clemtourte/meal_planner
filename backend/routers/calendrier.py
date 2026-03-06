@@ -24,7 +24,7 @@ async def _run(fn: Any) -> Any:
 async def get_semaine(
     debut: date,
     db: Client = Depends(get_supabase),
-    _user_id: str = Depends(get_user_id),
+    user_id: str = Depends(get_user_id),
 ) -> list[dict]:
     """Retourne tous les repas planifiés pour la semaine commençant à 'debut'."""
     fin = debut + timedelta(days=6)
@@ -34,6 +34,7 @@ async def get_semaine(
             .select("*, recettes(nom)")
             .gte("date", str(debut))
             .lte("date", str(fin))
+            .eq("user_id", user_id)
             .order("date")
             .execute()
         )
@@ -73,7 +74,7 @@ async def create_or_update_repas(
     result = await _run(
         lambda: (
             db.table("semaine_repas")
-            .upsert(data, on_conflict="date,type_repas")
+            .upsert(data, on_conflict="date,type_repas,user_id")
             .execute()
         )
     )
@@ -86,7 +87,10 @@ async def create_or_update_repas(
 
 @router.patch("/{repas_id}", response_model=RepasResponse)
 async def update_repas(
-    repas_id: UUID, repas: RepasUpdate, db: Client = Depends(get_supabase)
+    repas_id: UUID,
+    repas: RepasUpdate,
+    db: Client = Depends(get_supabase),
+    user_id: str = Depends(get_user_id),
 ) -> dict:
     """Met à jour un repas planifié (recette, nombre de personnes)."""
     update_data = repas.model_dump(exclude_none=True)
@@ -97,6 +101,7 @@ async def update_repas(
             db.table("semaine_repas")
             .update(update_data)
             .eq("id", str(repas_id))
+            .eq("user_id", user_id)
             .execute()
         )
     )
@@ -106,8 +111,18 @@ async def update_repas(
 
 
 @router.delete("/{repas_id}", status_code=204)
-async def delete_repas(repas_id: UUID, db: Client = Depends(get_supabase)) -> None:
+async def delete_repas(
+    repas_id: UUID,
+    db: Client = Depends(get_supabase),
+    user_id: str = Depends(get_user_id),
+) -> None:
     """Supprime un repas du calendrier."""
     await _run(
-        lambda: db.table("semaine_repas").delete().eq("id", str(repas_id)).execute()
+        lambda: (
+            db.table("semaine_repas")
+            .delete()
+            .eq("id", str(repas_id))
+            .eq("user_id", user_id)
+            .execute()
+        )
     )

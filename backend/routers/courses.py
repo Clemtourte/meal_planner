@@ -80,7 +80,7 @@ async def _run(fn: Any) -> Any:
 # ---------------------------------------------------------------------------
 
 
-async def _build_liste(debut: date, db: Client) -> ListeCourses:
+async def _build_liste(debut: date, db: Client, user_id: str) -> ListeCourses:
     """
     Génère la liste de courses agrégée pour la semaine commençant à 'debut'.
 
@@ -100,6 +100,7 @@ async def _build_liste(debut: date, db: Client) -> ListeCourses:
             .select("*, recettes(id, nb_portions)")
             .gte("date", str(debut))
             .lte("date", str(fin))
+            .eq("user_id", user_id)
             .execute()
         )
     )
@@ -164,6 +165,7 @@ async def _build_liste(debut: date, db: Client) -> ListeCourses:
                 db.table("prix")
                 .select("*")
                 .in_("ingredient_id", ingredient_ids)
+                .eq("user_id", user_id)
                 .execute()
             )
         )
@@ -244,7 +246,7 @@ async def _build_liste(debut: date, db: Client) -> ListeCourses:
 async def get_checks(
     semaine: date,
     db: Client = Depends(get_supabase),
-    _user_id: str = Depends(get_user_id),
+    user_id: str = Depends(get_user_id),
 ) -> list[dict]:
     """Retourne l'état des cases à cocher pour une semaine donnée."""
     result = await _run(
@@ -252,6 +254,7 @@ async def get_checks(
             db.table("courses_checks")
             .select("*")
             .eq("semaine_debut", str(semaine))
+            .eq("user_id", user_id)
             .execute()
         )
     )
@@ -271,12 +274,13 @@ async def upsert_check(
         "ingredient_id": str(ingredient_id),
         "checked": payload.checked,
         "checked_by": user_id,
+        "user_id": user_id,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
     result = await _run(
         lambda: (
             db.table("courses_checks")
-            .upsert(data, on_conflict="semaine_debut,ingredient_id")
+            .upsert(data, on_conflict="semaine_debut,ingredient_id,user_id")
             .execute()
         )
     )
@@ -289,17 +293,17 @@ async def upsert_check(
 async def get_liste_courses(
     debut: date,
     db: Client = Depends(get_supabase),
-    _user_id: str = Depends(get_user_id),
+    user_id: str = Depends(get_user_id),
 ) -> ListeCourses:
     """Génère la liste de courses pour la semaine commençant à la date 'debut'."""
-    return await _build_liste(debut, db)
+    return await _build_liste(debut, db, user_id)
 
 
 @router.get("/pdf")
 async def export_pdf(
     debut: date,
     db: Client = Depends(get_supabase),
-    _user_id: str = Depends(get_user_id),
+    user_id: str = Depends(get_user_id),
 ) -> Response:
     """Exporte la liste de courses en PDF via reportlab."""
     from reportlab.lib import colors
@@ -314,7 +318,7 @@ async def export_pdf(
         TableStyle,
     )
 
-    liste = await _build_liste(debut, db)
+    liste = await _build_liste(debut, db, user_id)
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
