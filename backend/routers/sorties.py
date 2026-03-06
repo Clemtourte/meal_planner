@@ -45,6 +45,7 @@ async def create_sortie(
 ) -> dict:
     """Crée une sortie resto ou commande."""
     data = payload.model_dump()
+    data["date"] = str(payload.date)
     data["user_id"] = user_id
     result = await _run(lambda: db.table("sorties").insert(data).execute())
     if not result.data:
@@ -61,6 +62,8 @@ async def update_sortie(
 ) -> dict:
     """Met à jour une sortie."""
     update_data = payload.model_dump(exclude_none=True)
+    if "date" in update_data:
+        update_data["date"] = str(update_data["date"])
     if not update_data:
         raise HTTPException(status_code=400, detail="Aucune donnée à mettre à jour")
     result = await _run(
