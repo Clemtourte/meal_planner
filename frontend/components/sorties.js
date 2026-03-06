@@ -13,7 +13,7 @@ async function initSorties() {
 
 async function _loadSorties() {
   try {
-    _sorties = await apiGet("/sorties");
+    _sorties = await apiGet("/sorties/");
   } catch (err) {
     showToast("Erreur chargement sorties : " + err.message, "error");
     _sorties = [];
@@ -112,7 +112,7 @@ async function submitSortieForm(e) {
       await apiPatch(`/sorties/${_editingSortieId}`, payload);
       showToast("Sortie modifiée ✓");
     } else {
-      await apiPost("/sorties", payload);
+      await apiPost("/sorties/", payload);
       showToast("Sortie ajoutée ✓");
     }
     hideModal("modal-sortie");
